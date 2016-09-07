@@ -13,7 +13,14 @@ pip install -r requirements.txt
 and you will be good to go.
 
 ## Usage
-You can run the pipeline with "--help" in command line, to check the options. Presumably, the following should be printed to the screen:
+We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder:
+```
+$ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
+```
+..and the CLAM pipeline's output will be generated in $output_dir as specified. Check "Output" section below to understand the file formats in the CLAM output folder.
+
+
+Alternatively, if you want to dig more into the parameters, you can run the pipeline with "--help" in command line and check the options. The following should be printed to the screen:
 
 For re-aligner,
 ```
@@ -78,12 +85,7 @@ Options:
   --call-transcriptome  Call peaks on transcriptome instead of genes with
                         multi-mappers. [Default: False]
 ```
-
-Alternatively, we provide a shell script that runs the whole pipeline sequentially with default parameters. You only need to give the paths to input bam file and output folder:
-```
-$ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
-```
-..and the CLAM pipeline's output will be generated in $output_dir as specified. 
+And you can specify your own parameters accordingly. For example, for m6A RIP-seq, window size parameter (-w) for re-aligner should be set to 100.
 
 ## Output
 The output of the re-aligner is "assigned_multimapped_reads.bam", which is a customized BAM file following SAM format. Note that the re-aligned weights are stored in "AS:f" tag, so please be aware and do not change/omit it.
