@@ -13,7 +13,7 @@ pip install -r requirements.txt
 and you will be good to go.
 
 ## Usage
-We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder, and a binary (0/1) argument for strandness:
+We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder, and a binary (0/1) indicator for strandness:
 ```
 $ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
 ```
