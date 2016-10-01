@@ -1,5 +1,5 @@
 # CLAM Version 1.0.0
-# **CL**IP-seq **A**nalysis of **M**ulti-mapped reads
+# CLIP-seq Analysis of Multi-mapped reads
 
 ## Requirements
 CLAM is a two-stage algorithm implemented in Python. It is intended to be used in Unix-based environment. It has been tested on Linux with Python 2.7.3.
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 and you will be good to go.
 
 ## Usage
-We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder:
+We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder, and a binary (0/1) argument for strandness:
 ```
 $ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
 ```
@@ -22,7 +22,7 @@ $ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
 
 Alternatively, if you want to dig more into the parameters, you can run the pipeline with "--help" in command line and check the options. The following should be printed to the screen:
 
-For re-aligner,
+Below is for re-aligner. Of parituclar note is that 
 ```
 $ python CLAM.lite_aligner.py --help
 Usage: CLAM.lite_aligner.py <options> input_file.bam
@@ -44,7 +44,7 @@ Options:
   --verbose             Verbose mode - print out all intermediate steps
                         [Default: False]
   --max-gap=MAX_GAPS    Maximum distance allowed in grouping reads. [Default:
-                        -1]
+                        50]
 ```
 
 For peak-caller,
@@ -85,7 +85,7 @@ Options:
   --call-transcriptome  Call peaks on transcriptome instead of genes with
                         multi-mappers. [Default: False]
 ```
-And you can specify your own parameters accordingly. For example, for m6A RIP-seq, window size parameter (-w) for re-aligner should be set to 100.
+And you can specify your own parameters accordingly. For example, for **m6A RIP-seq**, window size parameter (-w) and maximum gaps (--max-gap) for re-aligner should be set to 100.
 
 ## Output
 The output of the re-aligner is "assigned_multimapped_reads.bam", which is a customized BAM file following SAM format. Note that the re-aligned weights are stored in "AS:f" tag, so please be aware and do not change/omit it.
