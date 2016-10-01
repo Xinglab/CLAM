@@ -22,7 +22,7 @@ $ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
 
 Alternatively, if you want to dig more into the parameters, you can run the pipeline with "--help" in command line and check the options. The following should be printed to the screen:
 
-Below is for re-aligner. Of parituclar note is that 
+For CLAM re-aligner,
 ```
 $ python CLAM.lite_aligner.py --help
 Usage: CLAM.lite_aligner.py <options> input_file.bam
@@ -47,7 +47,7 @@ Options:
                         50]
 ```
 
-For peak-caller,
+For CLAM peak-caller,
 ```
 $ python CLAM.fdr_peak.MP.py --help
 Usage: CLAM.fdr_peak.MP.py <options>
