@@ -40,7 +40,7 @@ def main():
 	parser.add_option('--is-stranded', dest='is_stranded', default=False, action='store_true', help='Indicates if the reads are mapped with strand information. [Default: %default]')
 	parser.add_option('--resume', dest='resume', action='store_true', default=False, help='Resume mode - skipping pre-processing [Default: %default]')
 	parser.add_option('--verbose', dest='verbose', action='store_true', default=False, help='Verbose mode - print out all intermediate steps [Default: %default]')
-	parser.add_option('--max-gap', dest='max_gaps', type='int', default=-1, help='Maximum distance allowed in grouping reads. [Default: %default]')
+	parser.add_option('--max-gap', dest='max_gaps', type='int', default=50, help='Maximum distance allowed in grouping reads. [Default: %default]')
 	#parser.add_option('-g', dest='gtf', default='/u/home/f/frankwoe/scratch/hg19_gencodeV19.sorted.bed', help='GTF file (only need to specified when using -c). [Default: %default]')
 	#parser.add_option('--covariate-site-min', dest='cov_site_min', type='float', default=0, help='Minumim value required for same genomic region in covariate file [Default: %default]')
 	#parser.add_option('--covariate-gene-min', dest='cov_gene_min', type='float', default=1.0, help='Minumim value required for same gene in covariates (e.g. RPKM/FPKM). [Default: %default]')
@@ -75,8 +75,8 @@ def main():
 		#if os.path.isfile(tmp_dir + '/preserved_nodes_%s_%s.pdata' % (str(options.cov_site_min), str(options.cov_gene_min)) ) and not input_cov is None:
 		#	preserved_nodes=pickle.load(open(tmp_dir + '/preserved_nodes_%s_%s.pdata' % (str(options.cov_site_min), str(options.cov_gene_min)),'rb'))
 		#	steps_finished.append('preserved_nodes.pdata')
-		if os.path.isfile(output_dir + '/repeat_mapper.out'):
-			steps_finished.append('repeat_mapper.out')
+		if os.path.isfile(output_dir + '/CLAM_mapper.out'):
+			steps_finished.append('CLAM_mapper.out')
 		print_time_stamp('Resume mode On, found files: ' + ','.join(steps_finished))
 	else:
 		if(os.path.isdir(tmp_dir)):
@@ -106,15 +106,15 @@ def main():
 	
 	print_time_stamp('Pre-process done.')
 	
-	if options.resume and 'repeat_mapper.out' in steps_finished:
-		nodes_finished = read_rm_out(output_dir+'/repeat_mapper.out')
+	if options.resume and 'CLAM_mapper.out' in steps_finished:
+		nodes_finished = read_rm_out(output_dir+'/CLAM_mapper.out')
 	else:
 		nodes_finished=set()
 	
 	# Call EM model to assign multi-mapped reads
 	print_time_stamp('EM start.')
 	iter=0
-	out=open(output_dir + '/repeat_mapper.out','w',0) if options.resume else open(output_dir + '/repeat_mapper.out','a',0)
+	out=open(output_dir + '/CLAM_mapper.out','w',0) if options.resume else open(output_dir + '/CLAM_mapper.out','a',0)
 	seen=nodes_finished
 	for chr_strand in genomic_regions:
 		chr, strand = chr_strand.split(':')
@@ -144,12 +144,12 @@ def main():
 	out.close()
 	# write output files
 	print_time_stamp('Sorting output Bedfile.')
-	subprocess.call(''' sort -k1,1 -k2,2n %s/repeat_mapper.out > %s/repeat_mapper.sorted.out ''' % (output_dir, output_dir), shell=True)
+	subprocess.call(''' sort -k1,1 -k2,2n %s/CLAM_mapper.out > %s/CLAM_mapper.sorted.out ''' % (output_dir, output_dir), shell=True)
 	header_cmd='samtools view -H ' + tmp_dir + '/filter100.sorted.bam > ' + output_dir + '/sam_header.sam'
 	subprocess.call(header_cmd, shell=True)
-	body_cmd = ''' awk '{if($6=="+"){print $4"\t256\t"$1"\t"$2+1"\t0\t"$3-$2+1"M\t*\t0\t0\t*\t*\tAS:f:"$5}else{print $4"\t272\t"$1"\t"$2+1"\t0\t"$3-$2+1"M\t*\t0\t0\t*\t*\tAS:f:"$5 }}' ''' + output_dir + '/repeat_mapper.sorted.out > ' + output_dir + '/repeat_mapper.sorted.sam'
+	body_cmd = ''' awk '{if($6=="+"){print $4"\t256\t"$1"\t"$2+1"\t0\t"$3-$2+1"M\t*\t0\t0\t*\t*\tAS:f:"$5}else{print $4"\t272\t"$1"\t"$2+1"\t0\t"$3-$2+1"M\t*\t0\t0\t*\t*\tAS:f:"$5 }}' ''' + output_dir + '/CLAM_mapper.sorted.out > ' + output_dir + '/CLAM_mapper.sorted.sam'
 	subprocess.call(body_cmd, shell=True)
-	makeBam_cmd = 'cat %s/sam_header.sam %s/repeat_mapper.sorted.sam | samtools view -bS - > %s/assigned_multimapped_reads.bam' % (output_dir, output_dir,output_dir)
+	makeBam_cmd = 'cat %s/sam_header.sam %s/CLAM_mapper.sorted.sam | samtools view -bS - > %s/assigned_multimapped_reads.bam' % (output_dir, output_dir,output_dir)
 	subprocess.call(makeBam_cmd, shell=True)
 	index_cmd = 'samtools index %s/assigned_multimapped_reads.bam' % output_dir
 	subprocess.call(index_cmd, shell=True)
@@ -286,7 +286,8 @@ def construct_track_lite(subgraph, location_to_reads, read_to_locations):
 			rlen = rde - rds + 1
 			read_ind = rds - nds + 1
 			read_end = read_ind + rlen - 1 
-			node_track[nd].add(read_ind, read_score)
+			read_center = int(np.ceil( (read_ind + read_end) / 2.0))
+			node_track[nd].add(read_center, read_score)
 			if is_multi:
 				multi_reads_weights[read][nd]=[read_score, read_ind, read_end]
 	return(node_track, multi_reads_weights)	
@@ -311,15 +312,16 @@ def runEM(node_track, multi_reads_weights, w=50, epsilon=1e-6, max_iter=100, ver
 		for read in reweight:
 			dn=sum([reweight[read][x] for x in reweight[read]])
 			if dn==0:
-				print 'error occured.'
+				print >> sys.stdout, 'error occured.'
 				dn=1
 			for nd in reweight[read]:
 				old_score, rind, rend = multi_reads_weights[read][nd]
+				rcenter = int(np.ceil((rind+rend)/2.0))
 				new_score = reweight[read][nd] / float(dn)
-				node_track[nd].add(rind, new_score - old_score)
+				node_track[nd].add(rcenter, new_score - old_score)
 				residue += (old_score - new_score)**2
 				multi_reads_weights[read][nd][0] = new_score
-		if verbose and not iter % 10:
+		if verbose and (not iter % 10 or iter == max_iter):
 			print_time_stamp('Iter %d, residue = %f' % (iter, residue))
 		iter += 1
 	return multi_reads_weights
@@ -337,8 +339,8 @@ def get_genomic_regions(bamfile, distance, verbose, tmp_dir, is_stranded, min_un
 	print_time_stamp('Finding genomic regions with more than ' + str(min_unique_reads) + ' unique reads.')
 	for chr in chrs:
 		chr_aln=[x for x in bamfile.fetch(chr)]
-		tmp_cluster_pos=[0, 0]
-		tmp_cluster_neg=[0, 0]
+		tmp_cluster_pos=[0, 0, 0]
+		tmp_cluster_neg=[0, 0, 0]
 		tags_pos=[]
 		tags_neg=[]
 		if verbose:
@@ -349,30 +351,32 @@ def get_genomic_regions(bamfile, distance, verbose, tmp_dir, is_stranded, min_un
 				continue
 			pos=[int(x) for x in read.positions]
 			if read.is_reverse and is_stranded:  # add here to avoid negative strand if not stranded library
-				if pos[0] - tmp_cluster_neg[1] <= distance:
-					tmp_cluster_neg[1]=max(pos[-1], tmp_cluster_neg[1])
+				if (pos[0] + pos[-1])/2 - tmp_cluster_neg[2] <= distance:  # compute distance using read centers.
+					tmp_cluster_neg[1] = max(pos[-1], tmp_cluster_neg[1])
+					tmp_cluster_neg[2] = (pos[0] + pos[-1])/2
 					tags_neg.append([read.qname, read.positions[0], read.positions[-1]])
 				else:
 					if len(tags_neg) > 1 and sum([1 for x in tags_neg if not x[0] in multiread_set]) >= min_unique_reads:
 						node_name = chr + ':-:' + str(tmp_cluster_neg[0]) + ':' + str(tmp_cluster_neg[1])
-						pileup[chr + ':-'].append(tmp_cluster_neg)
+						pileup[chr + ':-'].append([tmp_cluster_neg[0], tmp_cluster_neg[1]])
 						location_to_reads[node_name].extend([x[0] for x in tags_neg])
 						for x_qname, x_pos0, x_pos1 in tags_neg:
 							read_to_locations[x_qname].update({node_name : str(x_pos0) + '\t' + str(x_pos1) })
-					tmp_cluster_neg=[pos[0], pos[-1]]
+					tmp_cluster_neg=[pos[0], pos[-1], (pos[0] + pos[-1])/2]
 					tags_neg=[ [read.qname, read.positions[0], read.positions[-1]] ]
 			else:
-				if pos[0] - tmp_cluster_pos[1] <= distance:
+				if (pos[0] + pos[-1])/2 - tmp_cluster_pos[2] <= distance:
 					tmp_cluster_pos[1]=max(pos[-1], tmp_cluster_pos[1])
+					tmp_cluster_pos[2] = (pos[0] + pos[-1])/2
 					tags_pos.append([read.qname, read.positions[0], read.positions[-1]])
 				else:
 					if len(tags_pos) > 1 and sum([1 for x in tags_pos if not x[0] in multiread_set]) >= min_unique_reads:
 						node_name = chr + ':+:' + str(tmp_cluster_pos[0]) + ':' + str(tmp_cluster_pos[1])
-						pileup[chr + ':+'].append(tmp_cluster_pos)
+						pileup[chr + ':+'].append([tmp_cluster_pos[0], tmp_cluster_pos[1]])
 						location_to_reads[node_name].extend([x[0] for x in tags_pos])
 						for x_qname, x_pos0, x_pos1 in tags_pos:
 							read_to_locations[x_qname].update({node_name : str(x_pos0) + '\t' + str(x_pos1) })
-					tmp_cluster_pos=[pos[0], pos[-1]]
+					tmp_cluster_pos=[pos[0], pos[-1], (pos[0] + pos[-1])/2]
 					tags_pos=[ [read.qname, read.positions[0], read.positions[-1]] ]		
 	print_time_stamp('Save genomic regions to file.')
 	pickle.dump(pileup, open(tmp_dir + '/genomic_regions_%s_%s.pdata' % (str(distance), str(min_unique_reads)),'wb'), -1)
