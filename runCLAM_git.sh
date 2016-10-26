@@ -32,7 +32,7 @@ fi
 
 if [ $4 -eq 1 ]
 then
-python $script_dir"/CLAM.fdr_peak.MP.py" --verbose --is-stranded -o $2 -t $3 --pval-cutoff=0.1 --pval-method=2 -p CLAM_peak.bed --ThreadN=30 --max-iter=1000
+python $script_dir"/CLAM.fdr_peak.MP.py" --verbose --is-stranded -o $2 -t $3 --pval-cutoff=0.001 --pval-method=2 -p CLAM_peak.bed --ThreadN=30 --max-iter=1000
 else
-python $script_dir"/CLAM.fdr_peak.MP.py" --verbose -o $2 -t $3 --pval-cutoff=0.1 --pval-method=2 -p CLAM_peak.bed --ThreadN=30 --max-iter=1000
+python $script_dir"/CLAM.fdr_peak.MP.py" --verbose -o $2 -t $3 --pval-cutoff=0.001 --pval-method=2 -p CLAM_peak.bed --ThreadN=30 --max-iter=1000
 fi
