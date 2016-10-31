@@ -77,8 +77,8 @@ Options:
                         4]
   --seed=SEED           Random seed for permutations. [Default: 100]
   --merge-method=MERGE_METHOD
-                        Peak merging method. 1: Single Nucleotide 2: Broad
-                        Coverage [Default: 1]
+                        Peak merging method. 1: Narrow peak 2: Broad peak
+                        [Default: 1]
   --pval-method=CORRECTION_METHOD
                         Multiple testing correction method. 1: Bonferroni 2:
                         BH FDR [Default: 1]

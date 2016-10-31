@@ -45,7 +45,7 @@ def main():
 	parser.add_option('-g', dest='gtf', default='./GTF/hg19_ensembl.sorted_gene.bed', help='GTF file [Default: %default]')
 	parser.add_option('--ThreadN', dest='nb_proc', type='int', default=4, help='Number of threads when doing permutations. [Default: %default]')
 	parser.add_option('--seed', dest='seed', type='int', default=100, help='Random seed for permutations. [Default: %default]')
-	parser.add_option('--merge-method', dest='merge_method', type='int', default=1, help='Peak merging method. 1: Single Nucleotide 2: Broad Coverage [Default: %default]')
+	parser.add_option('--merge-method', dest='merge_method', type='int', default=1, help='Peak merging method. 1: Narrow peak 2: Broad peak [Default: %default]')
 	parser.add_option('--pval-method', dest='correction_method', type='int', default=1, help='Multiple testing correction method. 1: Bonferroni 2: BH FDR [Default: %default]')
 	parser.add_option('--call-transcriptome', dest='call_all', action='store_true', default=False, help='Call peaks on transcriptome instead of genes with multi-mappers. [Default: %default]')
 	
@@ -142,7 +142,7 @@ def write_parameter_log(options, output_dir):
 	"""
 	Write paramter values to a log file, named by current time.
 	"""
-	merge_method_dict={1:'singleNucl', 2:'broadPeak'}
+	merge_method_dict={1:'narrowPeak', 2:'broadPeak'}
 	correction_method_dict={1:'Bonferroni', 2:'BH_FDR'}
 	with open(output_dir+'/CLAM_Peaker.Parameters.'+ strftime("%Y%m%d_%H%M") + '.txt', 'w') as log:
 		log.write('CLAM Peaker ' + __version__ + '\n')
