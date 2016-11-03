@@ -14,7 +14,8 @@
 #$ -M your@email.com
 #
 
-script_dir="./CLAM/bin"
+# change the script dir to your own if necessary
+script_dir="./"  
 
 echo "bamfile: $1"
 echo "output folder: $2"
