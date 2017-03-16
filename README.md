@@ -101,7 +101,7 @@ chr    start    end    height;fdr;gene    unique/combined    strand
 Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and "combined" as common peak; or lost peak otherwise.
 
 ## Testing data
-Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here]()
+Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](http://www.mimg.ucla.edu/faculty/xing/CLAM/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam)
 Then run CLAM on the dataset; if finished correctly, you should have rescued peaks at these two loci:
 
 chr11:82,624,179-82,626,008
