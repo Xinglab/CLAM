@@ -2,6 +2,8 @@
 # CLIP-seq Analysis of Multi-mapped reads
 
 ## Requirements
+Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.0.0/CLAM-v1.zip).
+
 CLAM is a two-stage algorithm implemented in Python. It is intended to be used in Unix-based environment. It has been tested on Linux with Python 2.7.3.
 
 CLAM depends on several commonly-used Python libraries, including [pysam](http://pysam.readthedocs.io/en/latest/) and [pybedtools](https://daler.github.io/pybedtools/index.html).
@@ -96,6 +98,15 @@ The output of the peak-caller is a bed file whose name is specified by user. It 
 chr    start    end    height;fdr;gene    unique/combined    strand
 ```
 Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and "combined" as common peak; or lost peak otherwise.
+
+## Testing data
+Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here]()
+Then run CLAM on the dataset; if finished correctly, you should have rescued peaks at these two loci:
+
+chr11:82,624,179-82,626,008
+
+chr20:37,054,180-37,055,310
+
 
 
 ## Contacts
