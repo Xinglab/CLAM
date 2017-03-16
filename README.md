@@ -1,8 +1,9 @@
 # CLAM Version 1.0.0
 # CLIP-seq Analysis of Multi-mapped reads
 
+## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.0.0/CLAM-v1.zip).
+
 ## Requirements
-Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.0.0/CLAM-v1.zip).
 
 CLAM is a two-stage algorithm implemented in Python. It is intended to be used in Unix-based environment. It has been tested on Linux with Python 2.7.3.
 
