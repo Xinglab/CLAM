@@ -12,8 +12,9 @@ CLAM v1.1 works under Python 2. Please click and download the latest version fro
 $ python setup.py install
 ```
 in your terminal and this will automatically install CLAM in your currently working python.
-You should have already install "pysam" for the python interpreter.
-You can also check the detailed requirements in the file "requirements.txt", or type
+
+You should have already installed "pysam" using pip/conda for your python interpreter.
+If not, you can check the detailed requirements in the file "requirements.txt", or type
 ```
 pip -r requirements.txt
 ```
