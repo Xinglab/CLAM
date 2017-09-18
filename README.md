@@ -1,7 +1,7 @@
 # CLAM Version 1.1.0
 # CLIP-seq Analysis of Multi-mapped reads
 
-## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.1.0/CLAM-v1.1.zip).
+## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.1.0/CLAM_v1.1.zip).
 
 ## Introduction
 CLAM is a general toolkit for re-aligning multi-mapped reads in CLIP/RIP-seq data and calling peaks.
