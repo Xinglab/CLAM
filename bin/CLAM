@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+
+
+"""CLIP-seq Analysis of Multi-mapped reads
+
+This is the main entry for CLAM. CLAM is a comprehensive peak caller for CLIP/RIP-seq 
+data that considers both uniquely-mapped and multi-mapped reads.
+
+Example:
+	$ CLAM [realigner|peakcaller] <options>
+
+Authors:
+	Zijun Zhang <zj.z[at]ucla.edu>
+	Yi Xing <yxing[at]ucla.edu>
+	
+Citation:
+	@article{zhang2017clip,
+	title={CLIP-seq analysis of multi-mapped reads discovers novel functional RNA regulatory sites in the human transcriptome},
+	author={Zhang, Zijun and Xing, Yi},
+	journal={Nucleic Acids Research},
+	year={2017}
+	}
+
+Todo:
+	add `visualize` and `evaluate` subcommands
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version
+"""
+
+__author__ = 'Zijun Zhang'
+__version__ = '1.1.0'
+__email__ = 'zj.z@ucla.edu'
+
+
+import os
+import sys
+import logging
+import argparse as ap
+import datetime
+
+
+def main():
+	"""main entry for CLAM
+	This function setup the logging and handle the input options
+	Args
+		None
+	Returns
+		None
+	"""
+	logger = setup_logger()
+	argparser = get_arg_parser()
+	args = argparser.parse_args()
+	
+	subcommand = args.subcommand
+	
+	if subcommand == 'preprocessor':
+		from CLAM import preprocessor
+		preprocessor.parser( args )
+	elif subcommand == 'realigner':
+		from CLAM import realigner
+		#print args
+		realigner.parser( args )
+	
+	elif subcommand == 'peakcaller':
+		from CLAM import peakcaller
+		#print args
+		peakcaller.parser( args )
+	elif subcommand == 'permutation_callpeak':
+		from CLAM import permutation_peakcaller
+		permutation_peakcaller.parser( args )
+
+
+def setup_logger():
+	"""Set up the logger for the whole pipeline
+	Args
+		None
+	Returns
+		logger: logging object
+	"""
+	# setup logger
+	logger = logging.getLogger('CLAM')
+	logger.setLevel(logging.DEBUG)
+	# create file handler which logs even debug messages
+	#fh = logging.FileHandler(
+	#	'log.CLAM.'+'-'.join(str(datetime.datetime.now()).replace(':','-').split()) + '.txt')
+	fh = logging.FileHandler('log.CLAM.txt')
+	fh.setLevel(logging.INFO)
+	# create console handler with a higher log level
+	ch = logging.StreamHandler()
+	ch.setLevel(logging.DEBUG)
+	# create formatter and add it to the handlers
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -\n %(message)s')
+	fh.setFormatter(formatter)
+	ch.setFormatter(formatter)
+	# add the handlers to the logger
+	logger.addHandler(fh)
+	logger.addHandler(ch)
+
+	return logger
+
+
+def get_arg_parser():
+	"""DOCSTRING
+	Args
+	Returns
+	"""
+	description = "%(prog)s -- CLip-seq Analysis of Multi-mapped reads"
+	epilog = "For command line options of each sub-command, type: %(prog)s COMMAND -h"
+	
+	argparser = ap.ArgumentParser(description=description, epilog=epilog)
+	argparser.add_argument("--version", action="version", version="%(prog)s "+__version__)
+	
+	subparsers = argparser.add_subparsers( dest="subcommand" )
+	
+	# preprocessing
+	add_preprocessor_parser(subparsers)
+	
+	# realigner
+	add_realigner_parser(subparsers)
+	
+	# peakcaller
+	add_peakcaller_parser(subparsers)
+	
+	# permutation_callpeak
+	add_permutation_callpeak_parser(subparsers)
+	
+	return argparser
+
+
+def add_preprocessor_parser( subparsers ):
+	ag_prep = subparsers.add_parser("preprocessor", help="CLAM Preprocessor: tag read alignments to specific locus")
+	
+	# input/output
+	ag_prep.add_argument("-i", "--input", dest="in_bam", type=str, required=True,
+		help="Input bam file")
+	
+	ag_prep.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
+		help="Output folder")
+	
+	# processing
+	ag_prep.add_argument("--read-tagger-method", dest="tag_method", type=str, 
+		choices= ('median', 'start'), default='median',
+		help="Read tagger method, 'median' for read center, 'start' for read start site; default: median")
+	
+	ag_prep.add_argument("--max-multihits", dest="max_hits", type=int, default=100,
+		help="The maximum hits allowed for multi-mapped reads; default: 100")
+	
+	return
+
+
+def add_realigner_parser( subparsers ):
+	ag_realigner = subparsers.add_parser("realigner", help="CLAM Realigner: realign multi-mapped reads using expectation-maximization")
+	
+	# input/output
+	ag_realigner.add_argument("-i", "--input", dest="in_bam", type=str, required=True,
+		help="Input bam file")
+	
+	ag_realigner.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
+		help="Output folder")
+	
+	# processing
+	ag_realigner.add_argument("--read-tagger-method", dest="tag_method", type=str, 
+		choices= ('median', 'start'), default='median',
+		help="Read tagger method, 'median' for read center, 'start' for read start site; default: median")
+	
+	ag_realigner.add_argument("--max-multihits", dest="max_hits", type=int, default=100,
+		help="The maximum hits allowed for multi-mapped reads; default: 100")
+	
+	ag_realigner.add_argument("--retag", dest="retag", default=False, action='store_true',
+		help="Retag the bam regardless when turned on; invalid when no previous files found")
+	
+	# realign
+	ag_realigner.add_argument("--winsize", dest="winsize", type=int, default=50,
+		help="Local window size for em computations; default: 50")
+
+	ag_realigner.add_argument("--unstranded", dest="unstranded", default=False, action="store_true",
+		help="Unstranded alignments if turned on")
+	
+	return
+
+
+def add_peakcaller_parser( subparsers ):
+	ag_peakcaller = subparsers.add_parser("peakcaller", help="CLAM Peakcaller: negative binomial model-based peak calling combining unique- and multi-reads")
+	
+	# input/output
+	ag_peakcaller.add_argument("-i", "--input", dest="in_bam", nargs='+', type=str, required=True,
+		help="Filepaths for IP bam files, e.g ubam1,ubam2 mbam1,mbam2")
+	
+	ag_peakcaller.add_argument("-c", "--control-dir", dest="con_bam", nargs='+', type=str, default=None,
+		help="Filepaths for control; default: None")
+	
+	ag_peakcaller.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
+		help="Output folder")
+	
+	ag_peakcaller.add_argument("--gtf", dest="gtf_fp", type=str, required=True,
+		help="GTF filepath")
+	
+	# processing
+	ag_peakcaller.add_argument("-p", "--nthread", dest="nthread", type=int, default=8,
+		help="Number of threads; default: 8")
+	
+	ag_peakcaller.add_argument("-u", "--unique-only", dest="unique_only", default=False, action='store_true',
+		help="Call peaks using only unique-mapped reads when turned on")
+	
+	# callpeak
+	ag_peakcaller.add_argument("--qval-cutoff", dest="qval_cutoff", type=float, default=0.05,
+		help="Cutoff for adjusted p-values; default: 0.05")
+	
+	ag_peakcaller.add_argument("-b", "--binsize", dest="binsize", type=int, default=50,
+		help="Bin size for calling peaks; default: 50")
+	
+	ag_peakcaller.add_argument("--unstranded", dest="unstranded", action="store_true", default=False,
+		help="Unstranded alignments if turned on")
+	
+	return
+
+
+
+def add_permutation_callpeak_parser( subparsers ):
+	ag_peakcaller = subparsers.add_parser("permutation_callpeak", help="CLAM permutation peakcaller: call peaks using permutation (as in v1.0.0)")
+	
+	# input/output
+	ag_peakcaller.add_argument("-i", "--input", dest="in_bam", nargs='+', type=str, required=True,
+		help="Filepaths for CLIP bam, e.g ubam mbam")
+		
+	ag_peakcaller.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
+		help="Output folder")
+	
+	ag_peakcaller.add_argument("--gtf", dest="gtf_fp", type=str, required=True,
+		help="GTF filepath")
+	
+	# processing
+	ag_peakcaller.add_argument("-p", "--nthread", dest="nthread", type=int, default=8,
+		help="Number of threads; default: 8")
+	
+	ag_peakcaller.add_argument("--random-state", dest="random_state", type=int, default=777,
+		help="Seed for random number generator in permutations; default: 777")
+	
+	# callpeak
+	ag_peakcaller.add_argument("--qval-cutoff", dest="qval_cutoff", type=float, default=0.005,
+		help="Cutoff for adjusted p-values; default: 0.005")
+	
+	ag_peakcaller.add_argument("--merge-size", dest="merge_size", type=int, default=50,
+		help="Select best peak within this size; default: 50")
+	
+	ag_peakcaller.add_argument("--extend", dest="extend", type=int, default=50,
+		help="Extend peak to this size if less than it; default: 50")
+	
+	ag_peakcaller.add_argument("--unstranded", dest="unstranded", action="store_true", default=False,
+		help="Unstranded alignments if turned on")
+	
+	return
+
+
+if __name__ == '__main__':
+	try:
+		main()
+	except KeyboardInterrupt:
+		sys.stderr.write("User interrupted; program terminated.")
+		sys.exit(0)

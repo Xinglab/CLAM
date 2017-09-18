@@ -1,103 +1,58 @@
-# CLAM Version 1.0.0
+# CLAM Version 1.1.0
 # CLIP-seq Analysis of Multi-mapped reads
 
-## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.0.0/CLAM-v1.zip).
+## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.1.0/CLAM-v1.1.zip).
 
-## Requirements
+## Introduction
+CLAM is a general toolkit for re-aligning multi-mapped reads in CLIP/RIP-seq data and calling peaks.
 
-CLAM is a two-stage algorithm implemented in Python. It is intended to be used in Unix-based environment. It has been tested on Linux with Python 2.7.3.
-
-CLAM depends on several commonly-used Python libraries, including [pysam](http://pysam.readthedocs.io/en/latest/) and [pybedtools](https://daler.github.io/pybedtools/index.html).
-
-A detailed dependency requirements (with version info) can be found in "requirements.txt". Alternatively, just run
+## Installation
+CLAM v1.1 works under Python 2. Please click and download the latest version from the releases. Once unzip the file, type
 ```
-pip install -r requirements.txt
+$ python setup.py install
 ```
-and you will be good to go.
+in your terminal and this will automatically install CLAM in your currently working python.
+You should have already install "pysam" for the python interpreter.
+You can also check the detailed requirements in the file "requirements.txt", or type
+```
+pip -r requirements.txt
+```
+to install those requirements manually.
 
 ## Usage
-We provide a general shell script wrapper that runs the whole pipeline sequentially with default parameters for CLIP-seq. You only need to give the paths to input bam file and output folder, and a binary (0/1) indicator for strandness:
+CLAM is run through issueing subcommands. Currently there are four subcommands available:
+preprocessor, realigner, peakcaller and permutation_callpeak.
 ```
-$ sh runCLAM_git.sh $bam $output_dir $temp_dir $is_stranded
-```
-..and the CLAM pipeline's output will be generated in $output_dir as specified. Check "Output" section below to understand the file formats in the CLAM output folder.
+usage: CLAM [-h] [--version]
+            {preprocessor,realigner,peakcaller,permutation_callpeak} ...
 
+CLAM -- CLip-seq Analysis of Multi-mapped reads
 
-Alternatively, if you want to dig more into the parameters, you can run the pipeline with "--help" in command line and check the options. The following should be printed to the screen:
+positional arguments:
+  {preprocessor,realigner,peakcaller,permutation_callpeak}
+    preprocessor        CLAM Preprocessor: tag read alignments to specific
+                        locus
+    realigner           CLAM Realigner: realign multi-mapped reads using
+                        expectation-maximization
+    peakcaller          CLAM Peakcaller: negative binomial model-based peak
+                        calling combining unique- and multi-reads
+    permutation_callpeak
+                        CLAM permutation peakcaller: call peaks using
+                        permutation (as in v1.0.0)
 
-For CLAM re-aligner,
-```
-$ python CLAM.lite_aligner.py --help
-Usage: CLAM.lite_aligner.py <options> input_file.bam
-
-Options:
+optional arguments:
   -h, --help            show this help message and exit
-  -o OUTPUT_DIR         Output file folder [Default ./out_CLAM]
-  -t TMP_DIR            Temporary file folder [Default ./tmp_CLAM]
-  -w WINDOW_SIZE        Local window size for EM [Default: 50]
-  --max-multihits=MAX_MULTIHITS
-                        Discard reads mapped to more than <max_multihits>
-                        locations. [Default: 100]
-  --min-unique-reads=MIN_UNIQUE_READS
-                        Discard genomic regions with less than
-                        <min_unique_reads> of unique reads. [Default: 0]
-  --is-stranded         Indicates if the reads are mapped with strand
-                        information. [Default: False]
-  --resume              Resume mode - skipping pre-processing [Default: False]
-  --verbose             Verbose mode - print out all intermediate steps
-                        [Default: False]
-  --max-gap=MAX_GAPS    Maximum distance allowed in grouping reads. [Default:
-                        50]
+  --version             show program's version number and exit
+
+For command line options of each sub-command, type: CLAM COMMAND -h
 ```
 
-For CLAM peak-caller,
-```
-$ python CLAM.fdr_peak.MP.py --help
-Usage: CLAM.fdr_peak.MP.py <options>
-
-Options:
-  -h, --help            show this help message and exit
-  --resume              Resume mode - skipping pre-processing [Default: False]
-  --verbose             Verbose mode - print out all intermediate steps
-                        [Default: False]
-  -o OUTPUT_DIR         Output file folder [Default ./out_CLAM]
-  -t TMP_DIR            Temporary file folder [Default ./tmp_CLAM]
-  -p PEAK_FILE          Output peak calling filename; if None then do not call
-                        peaks  [Default none]
-  --is-stranded         Indicates if the reads are mapped with strand
-                        information. [Default: False]
-  --extend=EXTEND       Extend to given nucleotides symmetrically at peak
-                        calling [Default: 50]
-  --pval-cutoff=PVAL_CUTOFF
-                        Corrected p-value threshold at peak calling [Default:
-                        0.001]
-  --merge-size=MERGE_SIZE
-                        merging window size at peak calling [Default: 50]
-  --max-iter=MAX_ITER   maximum iterations for permutation tests [Default:
-                        1000]
-  -g GTF                GTF file [Default: ./GTF/hg19_ensembl.sorted_gene.bed]
-  --ThreadN=NB_PROC     Number of threads when doing permutations. [Default:
-                        4]
-  --seed=SEED           Random seed for permutations. [Default: 100]
-  --merge-method=MERGE_METHOD
-                        Peak merging method. 1: Narrow peak 2: Broad peak
-                        [Default: 1]
-  --pval-method=CORRECTION_METHOD
-                        Multiple testing correction method. 1: Bonferroni 2:
-                        BH FDR [Default: 1]
-  --call-transcriptome  Call peaks on transcriptome instead of genes with
-                        multi-mappers. [Default: False]
-```
-And you can specify your own parameters accordingly. For example, for **m6A RIP-seq**, window size parameter (-w) and maximum gaps (--max-gap) for re-aligner should be set to 100.
 
 ## Output
 The output of the re-aligner is "assigned_multimapped_reads.bam", which is a customized BAM file following SAM format. Note that the re-aligned weights are stored in "AS:f" tag, so please be aware and do not change/omit it.
 Output of re-aligner could also be seen as an intermediate file for CLAM pipeline.
 
-The output of the peak-caller is a bed file whose name is specified by user. It is a 6-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file, separated by tabulate and ordered as 
-```
-chr    start    end    height;fdr;gene    unique/combined    strand
-```
+The output of the peak-caller is a bed file following NarrorPeak format. It is a 10-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file, separated by tabulate and ordered as 
 Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and "combined" as common peak; or lost peak otherwise.
 
 ## Testing data
