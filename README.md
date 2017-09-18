@@ -78,7 +78,7 @@ If you found a bug or mistake in this project, we would like to know about it. B
 3. Please reduce your input to the smallest possible size that still produces the bug; we will need your input data to reproduce the problem, and the smaller you can make it, the easier it will be.
 
 ## Copyright and License Information
-Copyright (C) 2016 University of California, Los Angeles (UCLA) Zijun Zhang and Yi Xing
+Copyright (C) 2016-2017 University of California, Los Angeles (UCLA) Zijun Zhang and Yi Xing
 
 Authors: Zijun Zhang and Yi Xing
 
