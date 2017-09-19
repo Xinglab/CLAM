@@ -481,13 +481,15 @@ def parser(args):
 		unstranded = args.unstranded
 		unique_only = args.unique_only
 		binsize = args.binsize
+		qval_cutoff = args.qval_cutoff
 		logger = logging.getLogger('CLAM.Peakcaller')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		peakcaller(ip_bam_list, gtf_fp, con_bam_list, nthread, 
 			out_dir=out_dir, binsize=binsize,
-			unique_only=unique_only, unstranded=unstranded)
+			unique_only=unique_only, unstranded=unstranded,
+			qval_cutoff=qval_cutoff)
 		
 		logger.info('end')
 	except KeyboardInterrupt():
