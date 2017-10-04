@@ -156,9 +156,9 @@ chr20:37,054,180-37,055,310
 
 
 ## Contacts
-Yi Xing [yxing@ucla.edu](mailto:yxing@ucla.edu)
-
 Zijun Zhang [zj.z@ucla.edu](mailto:zj.z@ucla.edu)
+
+Yi Xing [yxing@ucla.edu](mailto:yxing@ucla.edu)
 
 If you found a bug or mistake in this project, we would like to know about it. Before you send us the bug report though, please check the following:
 
