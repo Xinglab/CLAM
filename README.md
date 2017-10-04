@@ -67,8 +67,6 @@ For command line options of each sub-command, type: CLAM COMMAND -h
 
 Below we briefly describe what each subcomand does and provide an example command-line run.
 
-[TOC](#clip-seq-analysis-of-multi-mapped-reads)
-
 #### CLAM preprocessor
 This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
 reads passing QC, splits the input bam file and sorted them into `unique.sorted.bam` and `multi.sorted.bam`, 
@@ -124,6 +122,8 @@ CLAM permutation_callpeak -i path/to/outdir/unique.sorted.bam path/to/outdir/rea
 -o path/to/peaks/outdir -p 8 \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
+
+[TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
 ## Output
 The output of the re-aligner is "realigned.sorted.bam" (previously "assigned_multimapped_reads.bam" in v1.0), 
