@@ -99,7 +99,7 @@ This subcommand (new in v1.1) will call peaks by looking for bins enriched with 
 Negative-binomial model on observed read counts.
 
 Note we can specify both `unique.sorted.bam` (from `preprocessor`) and `realigned.sorted.bam` (from `realigner`) and 
-separte the two file pahts by a space, to call peaks using the combination of uniquely- and multi-mapped reads.
+separte the two file paths by a space, to call peaks using the combination of uniquely- and multi-mapped reads.
 
 Alternatively, we can also only input `unique.sorted.bam`; this will allow CLAM to call peaks using only uniquely-
 mapped reads.
