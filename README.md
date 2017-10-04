@@ -106,7 +106,7 @@ mapped reads.
 
 Example run:
 ```
-CLAM.py peakcaller -i path/to/IP/outdir/unique.sorted.bam path/to/IP/outdir/realigned.sorted.bam \
+CLAM peakcaller -i path/to/IP/outdir/unique.sorted.bam path/to/IP/outdir/realigned.sorted.bam \
 -c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
 -o path/to/peaks/outdir --unstranded --binsize 100 \
 --gtf path/to/gencode.v19.annotation.gtf
