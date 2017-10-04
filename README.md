@@ -6,7 +6,7 @@
 ## Table of Contents
  - [Introduction](#introduction) 
  - [Installation](#installation)
- - Usage(#usage)
+ - [Usage](#usage)
    - [preprocessor](#clam-preprocessor)
    - [realigner](#clam-realigner)
    - [peakcaller](#clam-peakcaller)
