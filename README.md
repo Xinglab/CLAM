@@ -11,13 +11,15 @@
    - [realigner](#clam-realigner)
    - [peakcaller](#clam-peakcaller)
    - [permutation_callpeak](#clam-permutation_callpeak)
- - Testing data(#testing-data)
- - Contacts(#contacts)
+ - [Testing data](#testing-data)
+ - [Contacts](#contacts)
 
 ## Introduction
 CLAM is a general toolkit for re-aligning multi-mapped reads in CLIP/RIP-seq data and calling peaks.
 
 For details, please read our [NAR paper](https://academic.oup.com/nar/article/45/16/9260/4077049/CLIP-seq-analysis-of-multi-mapped-reads-discovers).
+
+[TOC](#table-of-contents)
 
 ## Installation
 CLAM v1.1 works under Python 2. Please click and download the latest version from the releases. Once unzip the file, type
@@ -32,6 +34,8 @@ If not, you can check the detailed requirements in the file "requirements.txt", 
 pip -r requirements.txt
 ```
 to install those requirements manually.
+
+[TOC](#table-of-contents)
 
 ## Usage
 CLAM is run through issueing subcommands. Currently there are four subcommands available:
@@ -62,6 +66,8 @@ For command line options of each sub-command, type: CLAM COMMAND -h
 ```
 
 Below we briefly describe what each subcomand does and provide an example command-line run.
+
+[TOC](#table-of-contents)
 
 #### CLAM preprocessor
 This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
@@ -135,6 +141,7 @@ If you run model-based peak caller (new in v1.1), depending on the specified par
 the output will be either "narrow_peak.unique.bed" for peaks called using only uniquely-mapped reads; or 
 "narrow_peak.combined.bed" for peaks called when adding realigned multi-mapped reads.
 
+[TOC](#table-of-contents)
 
 ## Testing data
 Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](http://www.mimg.ucla.edu/faculty/xing/CLAM/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam).
@@ -145,6 +152,7 @@ chr11:82,624,179-82,626,008
 
 chr20:37,054,180-37,055,310
 
+[TOC](#table-of-contents)
 
 
 ## Contacts
@@ -157,6 +165,8 @@ If you found a bug or mistake in this project, we would like to know about it. B
 1. Are you using the latest version? The bug you found may already have been fixed.
 2. Check that your input is in the correct format and you have selected the correct options.
 3. Please reduce your input to the smallest possible size that still produces the bug; we will need your input data to reproduce the problem, and the smaller you can make it, the easier it will be.
+
+[TOC](#table-of-contents)
 
 ## Copyright and License Information
 Copyright (C) 2016-2017 University of California, Los Angeles (UCLA) Zijun Zhang and Yi Xing
