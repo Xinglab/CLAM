@@ -3,8 +3,17 @@
 
 ## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.1.0/CLAM_v1.1.zip).
 
+## Table of Contents
+ - Introduction 
+ - Installation
+ - Usage
+ - Testing data
+ - Contacts
+
 ## Introduction
 CLAM is a general toolkit for re-aligning multi-mapped reads in CLIP/RIP-seq data and calling peaks.
+
+For details, please read our [paper](https://academic.oup.com/nar/article/45/16/9260/4077049/CLIP-seq-analysis-of-multi-mapped-reads-discovers).
 
 ## Installation
 CLAM v1.1 works under Python 2. Please click and download the latest version from the releases. Once unzip the file, type
@@ -48,13 +57,78 @@ optional arguments:
 For command line options of each sub-command, type: CLAM COMMAND -h
 ```
 
+### CLAM preprocessor
+This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
+reads passing QC, splits the input bam file and sorted them into `unique.sorted.bam` and `multi.sorted.bam`, 
+and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
+
+Note that you can also run `CLAM realigner` directly, which will call `preprocessor`; `realigner` will determine
+if `preprocessor` has been called in the output folder. 
+
+If you don't want to run `realigner`, you can also run `peakcaller` upon preparing the files using `preprocessor`.
+
+Example run:
+```
+CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
+```
+
+### CLAM realigner
+This subcommand will run expectation-maxmization to assign the multi-mapped reads in a probablistic framework. 
+More details about the EM model is described in our NAR paper.
+
+Note when `--retag` is specified, `realigner` will re-run `preprocessor` regardless; otherwise, it will use 
+the prepared files in `outdir` if available.
+
+Example run:
+```
+CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method start --retag
+```
+
+### CLAM peakcaller
+This subcommand (new in v1.1) will call peaks by looking for bins enriched with IP reads over control, specifying a 
+Negative-binomial model on observed read counts.
+
+Note we can specify both `unique.sorted.bam` (from `preprocessor`) and `realigned.sorted.bam` (from `realigner`) and 
+separte the two file pahts by a space, to call peaks using the combination of uniquely- and multi-mapped reads.
+
+Alternatively, we can also only input `unique.sorted.bam`; this will allow CLAM to call peaks using only uniquely-
+mapped reads.
+
+Example run:
+```
+CLAM.py peakcaller -i path/to/IP/outdir/unique.sorted.bam path/to/IP/outdir/realigned.sorted.bam \
+-c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
+-o path/to/peaks/outdir --unstranded --binsize 100 \
+--gtf path/to/gencode.v19.annotation.gtf
+```
+
+### CLAM permutation_callpeak
+This subcommand will call peaks using permutation by randomly placing reads along the gene.
+More details about the permutation procedure is described in our NAR paper.
+
+Example run:
+```
+CLAM permutation_callpeak -i path/to/outdir/unique.sorted.bam path/to/outdir/realigned.sorted.bam \
+-o path/to/peaks/outdir -p 8 \
+--gtf path/to/gencode.v19.annotation.gtf
+```
 
 ## Output
-The output of the re-aligner is "assigned_multimapped_reads.bam", which is a customized BAM file following SAM format. Note that the re-aligned weights are stored in "AS:f" tag, so please be aware and do not change/omit it.
+The output of the re-aligner is "realigned.sorted.bam" (previously "assigned_multimapped_reads.bam" in v1.0), 
+which is a customized BAM file following SAM format. 
+Note that the re-aligned weights are stored in "AS:" tag, so please be aware and do not change/omit it.
 Output of re-aligner could also be seen as an intermediate file for CLAM pipeline.
 
-The output of the peak-caller is a bed file following NarrorPeak format. It is a 10-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file, separated by tabulate and ordered as 
-Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and "combined" as common peak; or lost peak otherwise.
+The output of the peak-caller is a bed file following NarrowPeak format. It is a 10-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file, separated by tabulate and ordered as 
+
+If you run permutation peak caller (as in v1.0), there will be only one output file called "narrow_peak.permutation.bed".
+Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and 
+"combined" as common peak; or lost peak otherwise.
+
+If you run model-based peak caller (new in v1.1), depending on the specified paramter (whether you turned on `--unique-only`), 
+the output will be either "narrow_peak.unique.bed" for peaks called using only uniquely-mapped reads; or 
+"narrow_peak.combined.bed" for peaks called when adding realigned multi-mapped reads.
+
 
 ## Testing data
 Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](http://www.mimg.ucla.edu/faculty/xing/CLAM/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam).
