@@ -40,8 +40,12 @@ to install those requirements manually.
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
 ## Input
-The input for CLAM is a sorted or unsorted BAM file of CLIP-seq alignment; in the case of RIP-seq or eCLIP,
-a BAM file for IP experiment and a BAM file for Control/input experiment are taken together as input.
+The input for CLAM is a sorted or unsorted BAM file of CLIP-seq alignment.
+
+In the case of RIP-seq or eCLIP, a BAM file for IP experiment and a BAM file for 
+Control/input experiment are taken together as input.
+
+[TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
 ## Usage
 CLAM is run through issueing subcommands. Currently there are four subcommands available:
