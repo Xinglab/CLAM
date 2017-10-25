@@ -46,11 +46,18 @@ def read_tagger(alignment, method='median'):
 
 
 
-def filter_bam_multihits(filename, max_hits, out_dir, read_tagger, omit_detail=True):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger, omit_detail=True):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:
 	"""
+	# logging the parameter values
+	frame = inspect.currentframe()
+	args, _, _, values = inspect.getargvalues(frame)
+	msg = 'Params:\n'
+	for i in args:
+		msg += "%s = %s \n"%(i, values[i])
+	logger.info(msg)
 	logger.info('filtering input bam')
 	
 	in_bam = pysam.Samfile(filename,'rb')
@@ -66,60 +73,162 @@ def filter_bam_multihits(filename, max_hits, out_dir, read_tagger, omit_detail=T
 	mbam=pysam.Samfile(mbam_fn, 'wb', template=in_bam)
 	mread_set = set()
 	
+	# do not omit sequences if to filter max_tags
+	if max_tags>0:
+		omit_detail=False
+	
 	# splitting unique and multi- reads
 	# and add the read taggers we need
-	#for read in tqdm(in_bam):
-	counter = 0
-	for read in in_bam:
-		# poor man's progress bar
-		counter += 1
-		if not counter % 10**6:
-			logger.debug('tagged %i alignments'%counter)
-		read_tag = read_tagger(read)
-		## skip reads with unassigned tagger
-		if read_tag==-1:
-			continue
-		read.tags += [('RT', read_tag)] ## add the tag
+	if not \
+		(os.path.isfile( os.path.join(out_dir,'unique.sorted.bam') ) and \
+		os.path.isfile( os.path.join(out_dir,'multi.sorted.bam')) ):
+			
+		#for read in tqdm(in_bam):
+		counter = 0
+		for read in in_bam:
+			# poor man's progress bar
+			counter += 1
+			if not counter % 10**6:
+				logger.debug('tagged %i alignments'%counter)
+			read_tag = read_tagger(read)
+			## skip reads with unassigned tagger
+			if read_tag==-1:
+				continue
+			read.tags += [('RT', read_tag)] ## add the tag
+			
+			## omit the details in read sequence and quality
+			## recommended for larger bam because this
+			## can save some memory/storage for large bams
+			if omit_detail:
+				read.query_sequence = '*'
+				read.query_qualities = '0'
+			
+			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
+				try:
+					if read.opt("NH") < max_hits:
+						mbam.write(read)
+						mread_set.add(read.qname)
+				except KeyError:
+					#print read
+					raise Exception('%s: missing NH tag when is_secondary=%s'%(read.qname,read.is_secondary))
+			else:
+				ubam.write(read)
+				unique_counter += 1
 		
-		## omit the details in read sequence and quality
-		## recommended for larger bam because this
-		## can save some memory/storage for large bams
-		if omit_detail:
-			read.query_sequence = '*'
-			read.query_qualities = '0'
+		ubam.close()
+		mbam.close()
 		
-		if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
-			try:
-				if read.opt("NH") < max_hits:
-					mbam.write(read)
-					mread_set.add(read.qname)
-			except KeyError:
-				#print read
-				raise Exception('%s: missing NH tag when is_secondary=%s'%(read.qname,read.is_secondary))
-		else:
-			ubam.write(read)
-			unique_counter += 1
+		# sorting
+		pysam.sort('-m', '4G', '-@', '4', '-T', os.path.dirname(sorted_ubam_fn), '-o', sorted_ubam_fn, ubam_fn)
+		os.remove(ubam_fn)
+		pysam.sort('-m', '4G', '-@', '4', '-T', os.path.dirname(sorted_mbam_fn), '-o', sorted_mbam_fn, mbam_fn)
+		os.remove(mbam_fn)
+		pysam.index(sorted_ubam_fn)
+		pysam.index(sorted_mbam_fn)
+		
+		# log the statistics
+		multi_counter = len(mread_set)
+		logger.info(
+				'Unique reads = %s;  ' % unique_counter + \
+				'Multi reads = %s (%.2f %%)' % \
+				( multi_counter, float(multi_counter)/(multi_counter+unique_counter)*100 )
+			)
+	else:
+		logger.info('found previously sorted tag-bam. checking if need collapsing.')
+	
+	# filter redundant tags if turned on
+	if max_tags>0:
+		logger.info('collapsing unique')
+		filter_bam_maxtags(os.path.join(out_dir, 'unique.sorted.collapsed.bam'), os.path.join(out_dir, 'unique.sorted.bam'), max_tags)
+		logger.info('collapsing multi')
+		filter_bam_maxtags(os.path.join(out_dir, 'multi.sorted.collapsed.bam'), os.path.join(out_dir, 'multi.sorted.bam'), max_tags)
 	
 	in_bam.close()
-	ubam.close()
-	mbam.close()
-	
-	# sorting
-	pysam.sort('-o', sorted_ubam_fn, ubam_fn)
-	os.remove(ubam_fn)
-	pysam.sort('-o', sorted_mbam_fn, mbam_fn)
-	os.remove(mbam_fn)
-	pysam.index(sorted_ubam_fn)
-	pysam.index(sorted_mbam_fn)
-	
-	# log the statistics
-	multi_counter = len(mread_set)
-	logger.info(
-			'Unique reads = %s;  ' % unique_counter + \
-			'Multi reads = %s (%.2f %%)' % \
-			( multi_counter, float(multi_counter)/(multi_counter+unique_counter)*100 )
-		)
 	return
+
+
+def collapse_stack(stack, collapse_dict, max_tags):
+	"""DOCSTRING
+	Args
+	Returns
+	"""
+	new_alignment_list = []
+	new_alignment_dict = defaultdict(list)
+	for aln in stack:
+		new_alignment_dict[aln.query_sequence].append(aln)
+	
+	# TODO 2017.10.21: 
+	# further collapse `new_alignment_dict`
+	# based on degeneracy and/or read tags
+	
+	for seq in new_alignment_dict:
+		this_alignment_qname_list = [x.qname for x in new_alignment_dict[seq] ]
+		is_collapsed = [True if x in collapse_dict else False for x in this_alignment_qname_list]
+		## if any of the alignment is collapsed before,
+		## we require all of them to be collapsed
+		if any(is_collapsed):
+			assert all(is_collapsed)
+			target_alignment_qname = collapse_dict[this_alignment_qname_list[0]][0:max_tags]
+			assert len(collapse_dict[this_alignment_qname_list[0]]) <= max_tags
+			target_alignment = [new_alignment_dict[seq][this_alignment_qname_list.index(x)] for x in target_alignment_qname]
+		else:
+			target_alignment = new_alignment_dict[seq][0:max_tags]
+			for aln_qname in this_alignment_qname_list:
+				collapse_dict[aln_qname] = [x.qname for x in target_alignment]
+		new_alignment_list.extend( target_alignment )
+	return new_alignment_list, collapse_dict
+
+
+def filter_bam_maxtags(obam_fn, ibam_fn, max_tags=1):
+	"""DOCSTRING
+	Args
+	Returns
+	"""
+	assert max_tags>0
+	# prepare files
+	ibam = pysam.Samfile(ibam_fn, 'rb')
+	obam = pysam.Samfile(obam_fn, 'wb', template=ibam)
+	# init 
+	collapse_dict = defaultdict(list)
+	chr_list=[x['SN'] for x in ibam.header['SQ']]
+	input_counter = 0
+	output_counter = 0
+	
+	for chr in chr_list:
+		# empty stack for each new chromosome
+		stack = []
+		last_pos = -1
+		for read in ibam.fetch(chr):
+			input_counter += 1
+			if not (input_counter % (5*(10**6)) ):
+				logger.debug('collapsed %i alignments'%input_counter)
+			if read.positions[0] > last_pos:
+				new_alignment_list, collapse_dict = collapse_stack(stack, collapse_dict, max_tags)
+				output_counter += len(new_alignment_list)
+				last_pos = read.positions[0]
+				stack = [read]
+				for new_alignment in new_alignment_list:
+					new_alignment.query_sequence = '*'
+					new_alignment.query_qualities = '0'
+					_ = obam.write(new_alignment)
+			else:
+				stack.append(read)
+		new_alignment_list, collapse_dict = collapse_stack(stack, collapse_dict, max_tags)
+		output_counter += len(new_alignment_list)
+		last_pos = read.positions[0]
+		for new_alignment in new_alignment_list:
+			new_alignment.query_sequence = '*'
+			new_alignment.query_qualities = '0'
+			_ = obam.write(new_alignment)
+	ibam.close()
+	obam.close()
+	#os.rename(obam_fn, ibam_fn)
+	#pysam.sort(obam_fn)
+	pysam.index(obam_fn)
+	logger.info('Input = %s; Output = %s; Redundancy = %.2f'%(input_counter,output_counter, 1-float(output_counter)/input_counter))
+	return
+	
+	
 
 
 def parser(args):
@@ -134,12 +243,15 @@ def parser(args):
 			os.mkdir(out_dir)
 		tag_method = args.tag_method
 		max_hits = args.max_hits
+		## Note: if specified max_tags, need pre-sorted bam
+		max_tags = args.max_tags
 		
 		#logger = logging.getLogger('CLAM.Preprocessor')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
-		filter_bam_multihits(in_bam, max_hits=max_hits, out_dir=out_dir, read_tagger=lambda x: read_tagger(x, method=tag_method))
+		filter_bam_multihits(in_bam, max_hits=max_hits, max_tags=max_tags, out_dir=out_dir, 
+			read_tagger=lambda x: read_tagger(x, method=tag_method))
 		
 		logger.info('end')
 	except KeyboardInterrupt():
