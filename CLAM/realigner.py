@@ -304,7 +304,7 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 
 
 
-def realigner(in_bam, out_dir, max_hits=100, read_tagger_method='median', 
+def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='median', 
 		winsize=50, unstranded=False, retag=False):
 	"""DOCSTRING
 	Args:
@@ -322,12 +322,16 @@ def realigner(in_bam, out_dir, max_hits=100, read_tagger_method='median',
 			os.path.isfile(os.path.join(out_dir,'unique.sorted.bam')) and \
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
-		filter_bam_multihits(in_bam, max_hits, out_dir, lambda x: read_tagger(x, method=read_tagger_method), 
+		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger=lambda x: read_tagger(x, method=read_tagger_method), 
 			omit_detail=True)
 
 	# file handlers
-	mbam = pysam.Samfile(os.path.join(out_dir, 'multi.sorted.bam'),'rb')
-	ubam = pysam.Samfile(os.path.join(out_dir, 'unique.sorted.bam'),'rb')
+	if max_tags>0:
+		mbam = pysam.Samfile(os.path.join(out_dir, 'multi.sorted.collapsed.bam'),'rb')
+		ubam = pysam.Samfile(os.path.join(out_dir, 'unique.sorted.collapsed.bam'),'rb')
+	else:
+		mbam = pysam.Samfile(os.path.join(out_dir, 'multi.sorted.bam'),'rb')
+		ubam = pysam.Samfile(os.path.join(out_dir, 'unique.sorted.bam'),'rb')
 	obam = pysam.Samfile(os.path.join(out_dir, 'realigned.bam'), 'wb', template = mbam)
 	chr_list=[x['SN'] for x in ubam.header['SQ']]
 	chr_size=[x['LN'] for x in mbam.header['SQ']]
@@ -400,6 +404,7 @@ def parser(args):
 			os.mkdir(out_dir)
 		tag_method = args.tag_method
 		max_hits = args.max_hits
+		max_tags = args.max_tags
 		retag = args.retag
 		winsize = args.winsize
 		unstranded = args.unstranded
@@ -408,7 +413,7 @@ def parser(args):
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
-		realigner(in_bam, out_dir, max_hits=max_hits, read_tagger_method=tag_method, 
+		realigner(in_bam, out_dir, max_hits=max_hits, max_tags=max_tags, read_tagger_method=tag_method, 
 			winsize=winsize, unstranded=unstranded, retag=retag)
 		
 		logger.info('end')

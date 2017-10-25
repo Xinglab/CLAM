@@ -98,7 +98,6 @@ def setup_logger():
 	# add the handlers to the logger
 	logger.addHandler(fh)
 	logger.addHandler(ch)
-
 	return logger
 
 
@@ -148,6 +147,9 @@ def add_preprocessor_parser( subparsers ):
 	ag_prep.add_argument("--max-multihits", dest="max_hits", type=int, default=100,
 		help="The maximum hits allowed for multi-mapped reads; default: 100")
 	
+	ag_prep.add_argument("--max-tags", dest="max_tags", type=int, default=-1,
+		help="The maximum identical tags at given location; default: -1, no filter")
+	
 	return
 
 
@@ -168,7 +170,10 @@ def add_realigner_parser( subparsers ):
 	
 	ag_realigner.add_argument("--max-multihits", dest="max_hits", type=int, default=100,
 		help="The maximum hits allowed for multi-mapped reads; default: 100")
-	
+
+	ag_realigner.add_argument("--max-tags", dest="max_tags", type=int, default=-1,
+		help="The maximum identical tags at given location; default: -1, no filter")
+
 	ag_realigner.add_argument("--retag", dest="retag", default=False, action='store_true',
 		help="Retag the bam regardless when turned on; invalid when no previous files found")
 	
@@ -208,6 +213,9 @@ def add_peakcaller_parser( subparsers ):
 	# callpeak
 	ag_peakcaller.add_argument("--qval-cutoff", dest="qval_cutoff", type=float, default=0.05,
 		help="Cutoff for adjusted p-values; default: 0.05")
+	
+	ag_peakcaller.add_argument("--fold-change", dest="fold_change", nargs='+', type=float, default=[2.],
+		help="Cutoff for fold change; default: 2")
 	
 	ag_peakcaller.add_argument("-b", "--binsize", dest="binsize", type=int, default=50,
 		help="Bin size for calling peaks; default: 50")

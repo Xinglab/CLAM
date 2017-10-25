@@ -251,7 +251,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	return binsignal, binscore_adj
 
 
-def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05):
+def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.]):
 	"""DOCSTRING
 	Args
 	Returns
@@ -309,10 +309,18 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	## chr start end name 1000 strand signalValue pVal qVal peak
 	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t.\t%.3e\t.\n"
 	BED = ''
+	if len(fold_change)==1:
+		lb = np.log(fold_change[0])
+		ub = np.inf
+	else:
+		assert fold_change[0]<fold_change[1]
+		lb = np.log(fold_change[0])
+		ub = np.log(fold_change[1])
 	for i in range(len(binscore_adj)):
 		qval = binscore_adj[i]
 		signal = signal_val[i]
-		if qval < qval_cutoff:
+		num_signal = float(signal) if with_control else np.mean([float(x) for x in signal.split(',')])
+		if qval < qval_cutoff and num_signal > lb and num_signal < ub :
 			chr = gene[0]
 			binstart = gene[1] + i*binsize
 			binend = gene[1] + (i+1)*binsize
@@ -322,7 +330,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	return BED
 	
 
-def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff) ):
+def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change) ):
 	"""DOCSTRING
 	Args
 	Returns
@@ -341,7 +349,7 @@ def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot,
 		gene = gene_annot[gene_name]
 		BED += call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
-				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff)
+				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change)
 	# close the handler
 	_ = map(lambda x: x.close(), [bam for x in bam_dict.values() for bam in x])
 	return BED
@@ -390,7 +398,7 @@ def make_bam_handler_dict(ip_bam_list, con_bam_list):
 def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8, 
 		out_dir='.', binsize=50,
 		unique_only=False, unstranded=True,
-		qval_cutoff=0.05):
+		qval_cutoff=0.05, fold_change=[2.]):
 	"""DOCSTRING
 	Args:
 	Returns:
@@ -407,7 +415,10 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 		with_control = True
 	else:
 		with_control = False
-	
+	if len(ip_bam_list)==1 and not unique_only:
+		logger.info('with only 1 bam file provided, i can only run --unique-only')
+		unique_only=True
+
 	if nthread == 1:
 		# file handlers only for single-thread
 		bam_dict = make_bam_handler_dict(ip_bam_list, con_bam_list)
@@ -427,7 +438,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 			gene = gene_annot[gene_name]
 			BED = call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
-				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff)
+				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change)
 			ofile.write(BED)
 			#print BED
 			peak_counter += len(BED.split('\n'))-1
@@ -443,7 +454,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 		pool=Pool(processes=nthread)
 		BED_list = pool.map(
 			_child_peak_caller, 
-			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff) for i in range(nthread)]
+			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change) for i in range(nthread)]
 			)
 		pool.terminate()
 		pool.join()
@@ -482,6 +493,7 @@ def parser(args):
 		unique_only = args.unique_only
 		binsize = args.binsize
 		qval_cutoff = args.qval_cutoff
+		fold_change = args.fold_change
 		logger = logging.getLogger('CLAM.Peakcaller')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
@@ -489,7 +501,8 @@ def parser(args):
 		peakcaller(ip_bam_list, gtf_fp, con_bam_list, nthread, 
 			out_dir=out_dir, binsize=binsize,
 			unique_only=unique_only, unstranded=unstranded,
-			qval_cutoff=qval_cutoff)
+			qval_cutoff=qval_cutoff,
+			fold_change=fold_change)
 		
 		logger.info('end')
 	except KeyboardInterrupt():
