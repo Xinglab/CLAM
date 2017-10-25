@@ -310,12 +310,12 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t.\t%.3e\t.\n"
 	BED = ''
 	if len(fold_change)==1:
-		lb = np.log(fold_change[0])
+		lb = np.log(fold_change[0]) if with_control else fold_change[0]
 		ub = np.inf
 	else:
 		assert fold_change[0]<fold_change[1]
-		lb = np.log(fold_change[0])
-		ub = np.log(fold_change[1])
+		lb = np.log(fold_change[0]) if with_control else fold_change[0]
+		ub = np.log(fold_change[1]) if with_control else fold_change[1]
 	for i in range(len(binscore_adj)):
 		qval = binscore_adj[i]
 		signal = signal_val[i]

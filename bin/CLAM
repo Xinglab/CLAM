@@ -215,7 +215,7 @@ def add_peakcaller_parser( subparsers ):
 		help="Cutoff for adjusted p-values; default: 0.05")
 	
 	ag_peakcaller.add_argument("--fold-change", dest="fold_change", nargs='+', type=float, default=[2.],
-		help="Cutoff for fold change; default: 2")
+		help="Threasholds for signal range (fold change w/ control; tag count w/o control); default: 2-inf")
 	
 	ag_peakcaller.add_argument("-b", "--binsize", dest="binsize", type=int, default=50,
 		help="Bin size for calling peaks; default: 50")
