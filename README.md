@@ -6,11 +6,13 @@
 ## Table of Contents
  - [Introduction](#introduction) 
  - [Installation](#installation)
+ - [Input](#input)
  - [Usage](#usage)
    - [preprocessor](#clam-preprocessor)
    - [realigner](#clam-realigner)
    - [peakcaller](#clam-peakcaller)
    - [permutation_callpeak](#clam-permutation_callpeak)
+ - [Output](#output)
  - [Testing data](#testing-data)
  - [Contacts](#contacts)
 
@@ -34,6 +36,14 @@ If not, you can check the detailed requirements in the file "requirements.txt", 
 pip -r requirements.txt
 ```
 to install those requirements manually.
+
+[TOC](#clip-seq-analysis-of-multi-mapped-reads)
+
+## Input
+The input for CLAM is a sorted or unsorted BAM file of CLIP-seq alignment.
+
+In the case of RIP-seq or eCLIP, a BAM file for IP experiment and a BAM file for 
+Control/input experiment are taken together as input.
 
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
@@ -69,13 +79,13 @@ Below we briefly describe what each subcomand does and provide an example comman
 
 #### CLAM preprocessor
 This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
-reads passing QC, splits the input bam file and sorted them into `unique.sorted.bam` and `multi.sorted.bam`, 
+reads passing QC, splits the input bam file by sorting them into `unique.sorted.bam` and `multi.sorted.bam`, 
 and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
 
-Note that you can also run `CLAM realigner` directly, which will call `preprocessor`; `realigner` will determine
+Note that you can also run `CLAM realigner` directly, which will call `preprocessor` and automatically determine
 if `preprocessor` has been called in the output folder. 
 
-If you don't want to run `realigner`, you can also run `peakcaller` upon preparing the files using `preprocessor`.
+If you don't want to run `realigner`, you can also run `peakcaller` directly after `preprocessor`.
 
 Example run:
 ```
@@ -131,7 +141,7 @@ which is a customized BAM file following SAM format.
 Note that the re-aligned weights are stored in "AS:" tag, so please be aware and do not change/omit it.
 Output of re-aligner could also be seen as an intermediate file for CLAM pipeline.
 
-The output of the peak-caller is a bed file following NarrowPeak format. It is a 10-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file, separated by tabulate and ordered as 
+The output of the peak-caller is a bed file following NarrowPeak format. It is a 10-column [BED](https://genome.ucsc.edu/FAQ/FAQformat.html#format1) format file. 
 
 If you run permutation peak caller (as in v1.0), there will be only one output file called "narrow_peak.permutation.bed".
 Hence a peak with "combined" but no "unique" on the fifth column indicates this is a rescued peak; both "unique" and 
