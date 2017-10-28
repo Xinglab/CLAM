@@ -51,7 +51,10 @@ def read_gtf(fn):
 				continue
 			chr, start, end, strand = ele[0], int(ele[3]), int(ele[4]), ele[6]
 			try:
-				gene_id = re.search(r'gene_id "(.+?)"', ele[-1]).group(1)
+				#gene_id = re.search(r'gene_id "(.+?)"', ele[-1]).group(1)
+				## a new regular expression generalizable to 
+				## universal situations
+				gene_id = re.findall(r"(\w+)", ele[-1])[1]
 			except AttributeError:
 				continue
 			gene_annot[gene_id] = [chr, start, end, strand, gene_id]
