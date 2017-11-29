@@ -96,7 +96,7 @@ def parser(args):
 			else:
 				wt_loc=extend_peak_region(peak[0], args.extend)
 			#f.write(wt_loc + '\t' + '\t'.join([str(x) for x in peak[1]]) + '\t' + peak[2] + '\tunique\n')
-			chr, start, end, strand = wt_lot.split('\t')
+			chr, start, end, strand = wt_loc.split('\t')
 			_, signal_qval, gene_name = peak
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'unique', strand, signal, qval) )
@@ -106,7 +106,7 @@ def parser(args):
 			else:
 				wt_loc=extend_peak_region(peak[0], args.extend)
 			#f.write(wt_loc + '\t' + '\t'.join([str(x) for x in peak[1]]) + '\t' + peak[2] + '\tcombined\n')
-			chr, start, end, strand = wt_lot.split('\t')
+			chr, start, end, strand = wt_loc.split('\t')
 			_, signal_qval, gene_name = peak
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
