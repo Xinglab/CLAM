@@ -10,7 +10,7 @@ Tested under python 2.7.3
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 __email__ = 'zj.z@ucla.edu'
 
 import os

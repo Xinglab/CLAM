@@ -9,7 +9,7 @@ Tested under python 2.7.3
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 __email__ = 'zj.z@ucla.edu'
 
 import os
@@ -111,9 +111,9 @@ def parser(args):
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
 	if args.unstranded:
-		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -d -1 -i stdin -c 4,5,6,7,9 -o collapse,collapse,distinct,collapse,collapse  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
 	else:
-		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -s -d -1 -i stdin -c 4,5,6,7,9 -o collapse,collapse,distinct,collapse,collapse  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -s -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
 	os.system( cmd )
 	logger.info('end')
 	return
