@@ -110,8 +110,11 @@ def parser(args):
 			_, signal_qval, gene_name = peak
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
-		
-	os.system(''' sort -k1,1 -k2,2n %s/all_permutation_peaks.txt | bedtools merge -s -d -1 -i stdin -c 4,5,6,7,9 -o collapse,collapse,distinct,collapse,collapse  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') ))
+	if args.unstranded:
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -d -1 -i stdin -c 4,5,6,7,9 -o collapse,collapse,distinct,collapse,collapse  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+	else:
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -s -d -1 -i stdin -c 4,5,6,7,9 -o collapse,collapse,distinct,collapse,collapse  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+	os.system( cmd )
 	logger.info('end')
 	return
 
