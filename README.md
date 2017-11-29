@@ -46,7 +46,7 @@ In the case of RIP-seq or eCLIP, a BAM file for IP experiment and a BAM file for
 Control/input experiment are taken together as input.
 
 ![#f03c15](https://placehold.it/15/f03c15/000000?text=+) Note: As in the released version v1.1.0, the `read_gtf` function had a bug and required the Gencode format GTF (i.e. last column of GTF
-matches gene_id "(xx)" ) to proceed the peak calling. This bug has been fixed in the github repository and will be updated in the next release.
+matches gene_id "(xx)" ) to proceed the peak calling. This bug has been fixed in the github repository and has been fixed in later releases/patches.
 
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
