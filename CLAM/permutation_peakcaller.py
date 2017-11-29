@@ -87,7 +87,7 @@ def parser(args):
 	combined_peaks=merge_peaks(combined_tid_to_qval, merge_size, args.qval_cutoff)
 	
 	# write peak-calling results to file.
-	narrowPeak_formatter = "%s\t%i\t%i\t%s\t%s\t%s\t%s\t.\t%.3e\t.\n"
+	narrowPeak_formatter = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t.\t%.3e\t.\n"
 	## chr start end name unique/combined strand signalValue pVal qVal peak
 	with open(output_dir + '/all_permutation_peaks.bed', 'w') as f:
 		for peak in unique_peaks:  # peak = ['chr\tstart\tend\tstrand', 'height\tqval\t', tid]
