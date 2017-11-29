@@ -1,7 +1,7 @@
 # CLAM Version 1.1.0
 # CLIP-seq Analysis of Multi-mapped reads
 
-## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/1.1.0/CLAM_v1.1.zip).
+## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/v1.1.1-beta/CLAM_v1.1.1.zip).
 
 ## Table of Contents
  - [Introduction](#introduction) 
