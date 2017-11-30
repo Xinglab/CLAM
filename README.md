@@ -33,7 +33,7 @@ in your terminal and this will automatically install CLAM in your currently work
 You should have already installed "pysam" using pip/conda for your python interpreter.
 If not, you can check the detailed requirements in the file "requirements.txt", or type
 ```
-pip -r requirements.txt
+pip install -r requirements.txt
 ```
 to install those requirements manually.
 
