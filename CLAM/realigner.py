@@ -111,7 +111,7 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 
 
 
-def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-10, max_iter=100, verbose=True):
+def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-6, max_iter=100, verbose=True):
 	"""	EM implementation for re-assigning multi-mapped reads, given the 
 	compatibility matrix of a subgraph.
 	Args:
@@ -170,8 +170,8 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	## currently tossing away those alignments.. (in `discarded_mread_alignments`)
 	
 	## check junction reads; should be filtered out in tagging step
-	if 'N' in alignment.cigarstring:
-		return None, None, [alignment]
+	#if 'N' in alignment.cigarstring:
+	#	return None, None, [alignment]
 	
 	## find the corresponding genomic cluster from `genomic_cluster_dict`
 	chr_strand = chrom+':'+strand
@@ -190,7 +190,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	if not cluster_name in location_to_reads:
 		raise Exception("cannot find cluster %s in `location_to_reads`"%cluster_name)
 	mread_list = location_to_reads[cluster_name]
-	# del location_to_reads[cluster_name]
+	del location_to_reads[cluster_name]
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
 	
@@ -241,17 +241,20 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 				build_read_cluster(alignment, chr_dict, 
 					location_to_reads, genomic_cluster_dict, 
 					unstranded=unstranded, winsize=winsize)
+			## record those discarded alignments/reads
+			## note: we mark discarded_mread as processed as well,
+			## so as not to create a bias to less clustered regions.
 			_ = map(processed_mread_alignments.add, discarded_mread_list)
+			_ = map(processed_mreads.add, [x.qname for x in discarded_mread_list])
 			if genomic_cluster is None:  # this cluster is invald (only double-mappers)
 				continue
 			
-			## update location_to_reads, read2loc
+			## update read_to_locations
 			node_name = ':'.join([str(x) for x in genomic_cluster])
 			#if node_name in subgraph:
 				#logger.debug("I revisited '%s' at read '%s'."%(node_name, read_qname))
 				#print("I revisited '%s' at read '%s'."%(node_name, read_qname))
 				#break
-			#subgraph.add(node_name)
 			for x_qname in this_mread_dict:
 				read_to_locations[x_qname].update({node_name :  this_mread_dict[x_qname]})
 			
@@ -303,8 +306,8 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 		cur_cluster_aln = {'+':[], '-':[]}
 		for read_alignment in mbam.fetch(chrom):
 			## should filter out junction reads in tagging step
-			if 'N' in read_alignment.cigarstring:
-				continue
+			#if 'N' in read_alignment.cigarstring:
+			#	continue
 			## add current alignment to mread_dict
 			mread_dict[read_alignment.qname].append(read_alignment)
 			site = read_alignment.opt('RT')
@@ -403,6 +406,8 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		for read in read_to_locations:
 			_ = map(subgraph.add, read_to_locations[read].keys())
 		subgraph = list(subgraph)
+		if len(subgraph)==1:
+			break
 		subg_counter += 1
 		logger.debug("subgraph %i: |e|=%i, |v|=%i"%(subg_counter, len(read_to_locations), len(subgraph)) )
 		
