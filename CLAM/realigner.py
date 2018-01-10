@@ -92,7 +92,7 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 			node_track[node].add(node_locus, read_x_score)
 			multi_reads_weights[read_x_qname][node]=[read_x_score, node_locus]
 			#del read_to_locations[read_x_qname][node]
-		del read_to_locations[read_x_qname]
+		#del read_to_locations[read_x_qname]
 	
 	# now add ureads by fetching from ubam; 
 	# we don't need to keep track of them, just add the weights
@@ -111,7 +111,7 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 
 
 
-def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-8, max_iter=100, verbose=True):
+def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-10, max_iter=100, verbose=True):
 	"""	EM implementation for re-assigning multi-mapped reads, given the 
 	compatibility matrix of a subgraph.
 	Args:
@@ -142,7 +142,7 @@ def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-8, max_iter=100, ve
 				residue += (old_score - new_score)**2
 				multi_reads_weights[read][nd][0] = new_score
 			residue /= n_est
-		if verbose and (not iter % 25 or iter == max_iter):
+		if verbose and (not iter % 10 or iter == max_iter):
 			logger.debug('Iter %d, residue = %f' % (iter, residue))
 		iter += 1
 	return multi_reads_weights
