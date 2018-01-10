@@ -29,7 +29,9 @@ logger = logging.getLogger('CLAM.Preprocessor')
 
 
 def alignment_mutation(x, mut_ref, mut_obs):
-	"""
+	"""DOCSTRING
+	Need to read reference genome
+	NotImplemented
 	"""	
 	raise NotImplementedError()
 
@@ -45,7 +47,7 @@ def read_tagger(alignment, method='median', **kwargs):
 		# start site of the read; trunction in iCLIP/eCLIP
 		'start': lambda x: x.positions[-1] if x.is_reverse else x.positions[0]+1,
 		# extend from 5' site to certain length; need kwargs
-		'extend': lambda x: x.positions[-1]-kwargs['ext_len'] if x.is_reverse x.positions[0]+kwargs['ext_len'],
+		'extend': lambda x: x.positions[-1]-kwargs['ext_len'] if x.is_reverse else x.positions[0]+kwargs['ext_len'],
 		# mutation tag a specific mutation type
 		'mutation': lambda x: alignment_mutation(x, kwargs['mut_ref'], kwargs['mut_obs'])
 		}
