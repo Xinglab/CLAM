@@ -189,7 +189,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	if not cluster_name in location_to_reads:
 		raise Exception("cannot find cluster %s in `location_to_reads`"%cluster_name)
 	mread_list = location_to_reads[cluster_name]
-	del location_to_reads[cluster_name]
+	# del location_to_reads[cluster_name]
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
 	
