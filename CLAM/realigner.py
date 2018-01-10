@@ -357,6 +357,8 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			) :
 		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
 			omit_detail=True)
+	else:
+		logger.info("found existing bams; skipped tagging.")
 
 	# file handlers
 	if max_tags>0:
@@ -374,12 +376,14 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 	# also construct the genomic cluster dict and cluster to alignment,
 	# by going through all mreads at once
 	genomic_cluster_dict, mread_dict, location_to_reads = get_genomic_clusters(mbam, winsize=winsize, unstranded=unstranded)
+	logger.debug('found %i mreads @ %i locations' % ( len(mread_dict), len(location_to_reads) ) )
 	
 	# keep a record of processed reads
 	processed_mreads = set()
 	
 	# iterate through all mreads
 	logger.info('running em')
+	subg_counter = 0
 	for read_qname in mread_dict:
 		if read_qname in processed_mreads:
 			continue
@@ -392,7 +396,8 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		for read in read_to_locations:
 			_ = map(subgraph.add, read_to_locations[read].keys())
 		subgraph = list(subgraph)
-		logger.debug("|v|=%i, |e|=%i"%(len(subgraph), len(read_to_locations)) )
+		subg_counter += 1
+		logger.debug("sub %i: |v|=%i, |e|=%i"%(subg_counter, len(subgraph), len(read_to_locations)) )
 		
 		## build the BIT tracks
 		node_track, multi_reads_weights = \
