@@ -406,8 +406,8 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		for read in read_to_locations:
 			_ = map(subgraph.add, read_to_locations[read].keys())
 		subgraph = list(subgraph)
-		if len(subgraph)==1:
-			break
+		#if len(subgraph)==1 and len(read_to_locations):
+		#	break
 		subg_counter += 1
 		logger.debug("subgraph %i: |e|=%i, |v|=%i"%(subg_counter, len(read_to_locations), len(subgraph)) )
 		
