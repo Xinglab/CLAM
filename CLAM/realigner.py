@@ -92,7 +92,7 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 			node_track[node].add(node_locus, read_x_score)
 			multi_reads_weights[read_x_qname][node]=[read_x_score, node_locus]
 			#del read_to_locations[read_x_qname][node]
-		#del read_to_locations[read_x_qname]
+		del read_to_locations[read_x_qname]
 	
 	# now add ureads by fetching from ubam; 
 	# we don't need to keep track of them, just add the weights
@@ -397,7 +397,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			_ = map(subgraph.add, read_to_locations[read].keys())
 		subgraph = list(subgraph)
 		subg_counter += 1
-		logger.debug("sub %i: |v|=%i, |e|=%i"%(subg_counter, len(subgraph), len(read_to_locations)) )
+		logger.debug("subgraph %i: |e|=%i, |v|=%i"%(subg_counter, len(read_to_locations), len(subgraph)) )
 		
 		## build the BIT tracks
 		node_track, multi_reads_weights = \
