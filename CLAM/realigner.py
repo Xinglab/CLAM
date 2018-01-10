@@ -65,8 +65,11 @@ class Bit:
 def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 	"""Construct BIT for each genomic region / node.
 	Args:
+		subgraph (list): a list of node names
+		read_to_locations (dict): 
 	Returns:
-	Returns a node-track dictionary and a dictionary for multi-mapped reads.
+		node_track (Bit): a node-track dictionary
+		multi_reads_weights (dict): a dictionary for multi-mapped reads.
 	"""
 	node_track = {}
 	total_len = 0
@@ -91,7 +94,8 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 			#del read_to_locations[read_x_qname][node]
 		#del read_to_locations[read_x_qname]
 	
-	# now add ureads by fetching from ubam
+	# now add ureads by fetching from ubam; 
+	# we don't need to keep track of them, just add the weights
 	for node in node_track:
 		chr, strand, start, end = node.split(':')
 		start, end = int(start), int(end)
@@ -142,7 +146,7 @@ def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-6, max_iter=100, ve
 	return multi_reads_weights
 
 
-def build_read_cluster(alignment, chr_dict, genomic_cluster_dict, mbam, unstranded=False, winsize=50):
+def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_dict, unstranded=False, winsize=50):
 	"""DOCSTRING
 	Args:
 	Returns:
@@ -157,7 +161,7 @@ def build_read_cluster(alignment, chr_dict, genomic_cluster_dict, mbam, unstrand
 	this_mread_dict = {}
 	this_mread_dict_set = defaultdict(set)
 	discarded_mread_alignments = []
-
+	
 	## note to me: need to be more careful with
 	## one read mapped to *multiple-locations* within one cluster
 	## currently tossing away those alignments.. (in `discarded_mread_alignments`)
@@ -179,9 +183,11 @@ def build_read_cluster(alignment, chr_dict, genomic_cluster_dict, mbam, unstrand
 	genomic_cluster = (chrom, strand, start, end)
 	
 	## fetch the reads
-	mread_list = [x for x in mbam.fetch(chrom, start, end) \
-		if (unstranded or x.is_reverse==is_reverse) and \
-		x.opt('RT')>=start and x.opt('RT')<=end]
+	# mread_list = [x for x in mbam.fetch(chrom, start, end) \
+		# if (unstranded or x.is_reverse==is_reverse) and \
+		# x.opt('RT')>=start and x.opt('RT')<=end]
+	cluster_name = ':'.join([chrom, strand, str(genomic_cluster_dict[chr_strand][idx-1]), str(genomic_cluster_dict[chr_strand][idx])])
+	mread_list = location_to_reads[cluster_name]
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
 	
@@ -195,9 +201,15 @@ def build_read_cluster(alignment, chr_dict, genomic_cluster_dict, mbam, unstrand
 	return genomic_cluster, this_mread_dict, discarded_mread_alignments
 
 
-def construct_subgraph(mbam, read_qname, mread_dict, processed_mreads, chr_dict, genomic_cluster_dict, winsize=50, unstranded=False):
+def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mreads, chr_dict, genomic_cluster_dict, winsize=50, unstranded=False):
 	"""DOCSTRING
 	Args:
+		location_to_reads (dict): genomic cluster -> Alignment
+		read_qname (str): target read ID
+		mread_dict (dict): stores all read ID -> Alignment 
+		processed_mreads (set): 
+		chr_dict (dict): map ref_id to chrom_name, chrom_size
+		genomic_cluster (dict): chrom:strand -> [interval1, interval2, ..]
 	Returns:
 	"""
 	# record of processed alignments only need kept on within-subgraph level
@@ -224,17 +236,18 @@ def construct_subgraph(mbam, read_qname, mread_dict, processed_mreads, chr_dict,
 			
 			genomic_cluster, this_mread_dict, discarded_mread_list = \
 				build_read_cluster(alignment, chr_dict, 
-					mbam = mbam, genomic_cluster_dict = genomic_cluster_dict, 
+					location_to_reads, genomic_cluster_dict, 
 					unstranded=unstranded, winsize=winsize)
 			_ = map(processed_mread_alignments.add, discarded_mread_list)
 			if genomic_cluster is None:  # this cluster is invald (only double-mappers)
 				continue
 			
-			## update loc2read, read2loc
+			## update location_to_reads, read2loc
 			node_name = ':'.join([str(x) for x in genomic_cluster])
 			#if node_name in subgraph:
-			#	logger.debug("I revisited '%s' at read '%s'."%(node_name, read_qname))
-			#	break
+				#logger.debug("I revisited '%s' at read '%s'."%(node_name, read_qname))
+				#print("I revisited '%s' at read '%s'."%(node_name, read_qname))
+				#break
 			#subgraph.add(node_name)
 			for x_qname in this_mread_dict:
 				read_to_locations[x_qname].update({node_name :  this_mread_dict[x_qname]})
@@ -260,11 +273,18 @@ def construct_subgraph(mbam, read_qname, mread_dict, processed_mreads, chr_dict,
 
 
 def get_genomic_clusters(mbam, winsize=50, unstranded=False):
-	"""DOCSTRING
+	"""Parsing the mbam to cluster the mread, and construct interval->alignment
 	Args:
+		mbam (pysam.Samfile): multi-read bam file handler
+		winsize (int): 
 	Returns:
 	"""
+	# chrom:+/- => [intv1_1, intv1_2, intv2_1, intv2_2]
 	genomic_cluster_dict = defaultdict(list)
+	# read_qname => [aln1, aln2, ..]
+	mread_dict = defaultdict(list)
+	# chrom:+/-:start:end => [read1_aln, read2_aln,]
+	location_to_reads = defaultdict(list)
 	chr_list=[x['SN'] for x in mbam.header['SQ']]
 	chr_size=[x['LN'] for x in mbam.header['SQ']]
 	chr_dict = {'name':chr_list, 'size':chr_size}
@@ -273,12 +293,15 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 		## initialze the placeholder for current positive/negative strand clusters
 		## pos/neg: [start, end, tag_counter]
 		cur_cluster = {'+':[0,0,0], '-':[0,0,0]}
-		for read in mbam.fetch(chrom):
+		cur_cluster_aln = {'+':[], '-':[]}
+		for read_alignment in mbam.fetch(chrom):
 			## should filter out junction reads in tagging step
-			if 'N' in read.cigarstring:
+			if 'N' in read_alignment.cigarstring:
 				continue
-			site = read.opt('RT')
-			strand = '-' if read.is_reverse and not unstranded else '+'
+			## add current alignment to mread_dict
+			mread_dict[read_alignment.qname].append(read_alignment)
+			site = read_alignment.opt('RT')
+			strand = '-' if read_alignment.is_reverse and not unstranded else '+'
 			### if this read is within the window size
 			if site <= cur_cluster[strand][1]+winsize:
 				if site < cur_cluster[strand][0]:
@@ -286,6 +309,7 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 				if site > cur_cluster[strand][1]:
 					cur_cluster[strand][1] = site
 				cur_cluster[strand][2] += 1
+				cur_cluster_aln[strand].append(read_alignment)
 			### otherwise, push the current cluster to `genomic_cluster_dict`
 			else:
 				if cur_cluster[strand][2] > 0:
@@ -295,12 +319,21 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 							cur_cluster[strand][1]+1
 						]
 						)
+					genomic_cluster_str = ':'.join([chrom, strand, str(cur_cluster[strand][0]), str(cur_cluster[strand][1]+1) ])
+					location_to_reads[genomic_cluster_str].extend(cur_cluster_aln[strand])
 				cur_cluster[strand] = [site, site+1, 1]
-		## don't forget to push the last genomic cluster to dict
-		genomic_cluster_dict[chrom+':+'].extend([cur_cluster['+'][0],cur_cluster['+'][1]+1])
-		genomic_cluster_dict[chrom+':-'].extend([cur_cluster['-'][0],cur_cluster['-'][1]+1])
+				cur_cluster_aln[strand] = [read_alignment]
+		## remember to push the last genomic cluster to dict
+		if cur_cluster['+'][2] > 0:
+			genomic_cluster_dict[chrom+':+'].extend([cur_cluster['+'][0],cur_cluster['+'][1]+1])
+			genomic_cluster_str = ':'.join([chrom, '+', str(cur_cluster['+'][0]), str(cur_cluster['+'][1]+1) ])
+			location_to_reads[genomic_cluster_str].extend(cur_cluster_aln['+'])
+		if cur_cluster['-'][2] > 0:
+			genomic_cluster_dict[chrom+':-'].extend([cur_cluster['-'][0],cur_cluster['-'][1]+1])
+			genomic_cluster_str = ':'.join([chrom, '-', str(cur_cluster['-'][0]), str(cur_cluster['-'][1]+1) ])
+			location_to_reads[genomic_cluster_str].extend(cur_cluster_aln['-'])
 	
-	return genomic_cluster_dict
+	return genomic_cluster_dict, mread_dict, location_to_reads
 
 
 
@@ -322,7 +355,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			os.path.isfile(os.path.join(out_dir,'unique.sorted.bam')) and \
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
-		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger=lambda x: read_tagger(x, method=read_tagger_method), 
+		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
 			omit_detail=True)
 
 	# file handlers
@@ -337,13 +370,10 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 	chr_size=[x['LN'] for x in mbam.header['SQ']]
 	chr_dict = {'name':chr_list, 'size':chr_size}
 	
-	# construct the mread_dict; this will be needed throughout the program
-	mread_dict = defaultdict(list)
-	for alignment in mbam:
-		mread_dict[alignment.qname].append(alignment)
-	
-	# construct the genomic cluster dict by going through all mreads
-	genomic_cluster_dict = get_genomic_clusters(mbam, winsize=winsize, unstranded=unstranded)
+	# construct the `mread_dict`, this will be needed throughout the program;
+	# also construct the genomic cluster dict and cluster to alignment,
+	# by going through all mreads at once
+	genomic_cluster_dict, mread_dict, location_to_reads = get_genomic_clusters(mbam, winsize=winsize, unstranded=unstranded)
 	
 	# keep a record of processed reads
 	processed_mreads = set()
@@ -356,12 +386,13 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			
 		## construct the fully-connected subgraph for each read
 		read_to_locations, processed_mreads = \
-			construct_subgraph(mbam, read_qname, mread_dict, processed_mreads, chr_dict, \
+			construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mreads, chr_dict, \
 				genomic_cluster_dict, winsize=winsize, unstranded=unstranded)
 		subgraph = set()
 		for read in read_to_locations:
 			_ = map(subgraph.add, read_to_locations[read].keys())
 		subgraph = list(subgraph)
+		logger.debug("|v|=%i, |e|=%i"%(len(subgraph), len(read_to_locations)) )
 		
 		## build the BIT tracks
 		node_track, multi_reads_weights = \
@@ -377,7 +408,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 				alignment = read_to_locations[read][node]
 				score = round(multi_reads_weights[read][node][0], 3)
 				alignment.set_tag('AS', score)
-				alignment.set_tag('PG', 'CLAM')
+				#alignment.set_tag('PG', 'CLAM')
 				obam.write(alignment)
 	# sort the final output
 	logger.info('sorting output')
