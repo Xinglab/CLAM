@@ -119,7 +119,8 @@ def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-10, max_iter=100, v
 	"""
 	iter = 1
 	residue = 1
-	n_est = sum([1. for r in multi_reads_weights for n in multi_reads_weights[r] ])
+	#n_est = sum([1. for r in multi_reads_weights for n in multi_reads_weights[r] ])
+	n_est = sum([1. for r in multi_reads_weights ])
 	while iter < max_iter and residue > epsilon:
 		residue = 0
 		reweight=defaultdict(dict)
