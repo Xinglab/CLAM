@@ -183,11 +183,11 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	genomic_cluster = (chrom, strand, start, end)
 	
 	## fetch the reads
-	# mread_list = [x for x in mbam.fetch(chrom, start, end) \
-		# if (unstranded or x.is_reverse==is_reverse) and \
-		# x.opt('RT')>=start and x.opt('RT')<=end]
 	cluster_name = ':'.join([chrom, strand, str(genomic_cluster_dict[chr_strand][idx-1]), str(genomic_cluster_dict[chr_strand][idx])])
+	if not cluster_name in location_to_reads:
+		raise Exception("cannot find cluster %s in `location_to_reads`"%cluster_name)
 	mread_list = location_to_reads[cluster_name]
+	del location_to_reads[cluster_name]
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
 	
@@ -276,8 +276,12 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 	"""Parsing the mbam to cluster the mread, and construct interval->alignment
 	Args:
 		mbam (pysam.Samfile): multi-read bam file handler
-		winsize (int): 
+		winsize (int): window size for search mreads
+		unstranded (bool): if turned on, all reads will be pushed to forward strand
 	Returns:
+		genomic_cluster_dict (dict): chrom:+/- => [intv1, intv2, ..]
+		mread_dict (dict): read_qname => [aln1, aln2, ..]
+		location_to_reads (dict): chrom:strand:start:end => [read1_aln, real2_aln, ..]
 	"""
 	# chrom:+/- => [intv1_1, intv1_2, intv2_1, intv2_2]
 	genomic_cluster_dict = defaultdict(list)
