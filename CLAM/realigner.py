@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 
-"""
-This re-aligner script is part of the CLAM pipeline.
+"""This re-aligner script is part of the CLAM pipeline.
 
-It takes bam file as input, and outputs a weighed bam file for multi-mapped reads.
+This subcommand will run expectation-maxmization to assign the multi-mapped reads in a probablistic framework. 
+More details about the EM model is described in our NAR paper.
 
-Tested under python 2.7.3
+Note when `--retag` is specified, `realigner` will re-run `preprocessor` regardless; otherwise, it will use 
+the prepared files in `outdir` if available.
+
+Example run:
+	```
+	CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method start --retag
+	```
+
+Tested under python 2.7
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 __email__ = 'zj.z@ucla.edu'
 
 
@@ -32,7 +40,10 @@ class Bit:
 	""" Binary Indexed Tree to store values in genomic intervals.
 	Implementation modified from http://www.geeksforgeeks.org/binary-indexed-tree-or-fenwick-tree-2/
 	Args:
+		n (int): length of the interval to construct
 	Returns:
+		a BIT object with `add` and `sum` method over arbitrary sub-intervals
+		with O(log(n)) time
 	"""
 	
 	def __init__(self, n):
@@ -68,8 +79,8 @@ def construct_BIT_track(subgraph, read_to_locations, ubam, unstranded=False):
 		subgraph (list): a list of node names
 		read_to_locations (dict): 
 	Returns:
-		node_track (Bit): a node-track dictionary
-		multi_reads_weights (dict): a dictionary for multi-mapped reads.
+		node_track (dict/BIT): a node-track dictionary; node_name => BIT
+		multi_reads_weights (dict): a dictionary for multi-mapped reads; read_qname => node => [score, locus]
 	"""
 	node_track = {}
 	total_len = 0
@@ -115,7 +126,14 @@ def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-6, max_iter=100, ve
 	"""	EM implementation for re-assigning multi-mapped reads, given the 
 	compatibility matrix of a subgraph.
 	Args:
+		node_track (dict): dict. of BIT returned from `construct_BIT_track`
+		multi_reads_weights (dict): dict of mread qname and locus returned from `construct_BIT_track`
+		w (int): window size for search vicinity reads
+		epsilon (float): a small number for testing convergence between iterations
+		max_iter (int): maximum iterations of EM
+		verbose (bool, options): prints status in verbose mode
 	Returns:
+		multi_reads_weights (dict): the mread weight after EM
 	"""
 	iter = 1
 	residue = 1
@@ -150,9 +168,19 @@ def run_EM(node_track, multi_reads_weights, w=50, epsilon=1e-6, max_iter=100, ve
 
 
 def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_dict, unstranded=False, winsize=50):
-	"""DOCSTRING
+	"""Given an alignment, find its genomic cluster, and all other mreads 
+	in that cluster
 	Args:
+		alignment (pysam.AlignedSegment): pysam alignment object
+		chr_dict (dict): a dict of chrom name and sizes
+		location_to_reads (dict): stores all mreads indexed by aligned locus; cluster name => mread alignments
+		genomic_cluster_dict (dict): stores genomic clusters; chrom => [intv1, intv2, ..]
+		unstranded (bool): if true, don't use the strand info in alignment
+		winsize (int): window size for search ureads
 	Returns:
+		genomic_cluster (tuple): the target chrom and coordinates after expanding the window size
+		this_mread_dict (dict): dict. of mread alignments in the target cluster indexed by read_qname
+		discarded_mread_alignments (list): discarded mread alignments because of multiple occurences within one cluster
 	"""
 	chr_list = chr_dict['name']
 	chr_size = chr_dict['size']
@@ -205,15 +233,18 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 
 
 def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mreads, chr_dict, genomic_cluster_dict, winsize=50, unstranded=False):
-	"""DOCSTRING
+	"""Given a mread_qname, find exhaustively all other connected mreads.
 	Args:
-		location_to_reads (dict): genomic cluster -> Alignment
+		location_to_reads (dict): genomic cluster => Alignment
 		read_qname (str): target read ID
-		mread_dict (dict): stores all read ID -> Alignment 
+		mread_dict (dict): stores all read ID => Alignment 
 		processed_mreads (set): 
 		chr_dict (dict): map ref_id to chrom_name, chrom_size
-		genomic_cluster (dict): chrom:strand -> [interval1, interval2, ..]
+		genomic_cluster (dict): chrom:strand => [interval1, interval2, ..]
 	Returns:
+		read_to_locations (dict): collect a subset of mread alignments in the same 
+			subgraph starting with read_qname 
+		processed_mreads (set): record all processed mread_qname to avoid re-processing
 	"""
 	# record of processed alignments only need kept on within-subgraph level
 	processed_mread_alignments = set()
@@ -279,7 +310,9 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 
 
 def get_genomic_clusters(mbam, winsize=50, unstranded=False):
-	"""Parsing the mbam to cluster the mread, and construct interval->alignment
+	"""Parsing the mbam to cluster the mread, and construct interval=>alignment.
+	Using the same object in difference references, and just keep one copy of 
+	the mread-alignments to minimize memory usage.
 	Args:
 		mbam (pysam.Samfile): multi-read bam file handler
 		winsize (int): window size for search mreads
@@ -349,9 +382,19 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 
 def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='median', 
 		winsize=50, unstranded=False, retag=False):
-	"""DOCSTRING
+	"""The main entry for CLAM-realigner.
 	Args:
+		in_bam (str): filepath for input bam
+		out_dir (str): filepath for CLAM output folder
+		max_hits (int):  maximum number of aligned loci allowed for mreads
+		max_tags (int): maximum number of identical alignments allowed for each 
+			genomic locus, more amount will be collapsed; -1 is no collapsing
+		read_tagger_method (str): the tagger function type
+		winsize (int): window size 
+		unstranded (bool): ignore alignment strand info if turned on
+		retag (bool): force to call `preprocessor` to process `in_bam` if turned on
 	Returns:
+		None
 	"""
 	# logging the parameter values
 	frame = inspect.currentframe()
@@ -443,9 +486,11 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 
 
 def parser(args):
-	"""DOCSTRING
-	Args
-	Returns
+	"""The command-line parser for CLAM-realigner
+	Args:
+		args (argparse.ArgumentParser): receives commandline arguments
+	Returns:
+		None
 	"""
 	try:
 		in_bam = args.in_bam
@@ -474,7 +519,12 @@ def parser(args):
 	
 	
 
-if __name__=='__main__':		
+if __name__=='__main__':
+	# *****
+	# NOTE: below is used for debugging purpose;
+	# users should call from `CLAM subcommand` instead
+	# of running this script directly
+	# *****
 	### set up logger
 	logger = logging.getLogger('CLAM')
 	logger.setLevel(logging.DEBUG)

@@ -1,16 +1,26 @@
 #!/usr/bin/env python
 
-"""
-This preprocessing script is part of the CLAM pipeline.
+"""This preprocessing script is part of the CLAM pipeline.
 
-It takes bam file as input, separates unique- and multi-mapped reads, and
-tag the read to a specific locus given a tagging method.
+This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
+reads passing QC, splits the input bam file by sorting them into `unique.sorted.bam` and `multi.sorted.bam`, 
+and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
 
-Tested under python 2.7.3
+Note that you can also run `CLAM realigner` directly, which will call `preprocessor` and automatically determine
+if `preprocessor` has been called in the output folder. 
+
+If you don't want to run `realigner`, you can also run `peakcaller` directly after `preprocessor`.
+
+Example run:
+	```
+	CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
+	```
+
+Tested under python 2.7
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 __email__ = 'zj.z@ucla.edu'
 
 import os
