@@ -107,8 +107,8 @@ def count_gene_read_tags(bam_list, gene, is_unique=True, unstranded=False):
 				counter += 1
 				if unstranded or x.is_reverse==is_reverse:
 					read_tags.append([x.opt('RT'), x.opt('AS')])
-				if counter > 1*10**8:
-					logger.info("too many mreads (>100million) on %s, probably rRNA gene - discarded")
+				if counter > 0.5*10**8:
+					logger.info("too many mreads (>50million) on %s, probably rRNA gene - discarded"%(':'.join([chr,strand,str(start),str(end)])))
 					return interval
 		for tag in read_tags:
 			if tag[0]<start or tag[0]>=end:
