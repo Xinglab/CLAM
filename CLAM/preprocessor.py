@@ -1,16 +1,26 @@
 #!/usr/bin/env python
 
-"""
-This preprocessing script is part of the CLAM pipeline.
+"""This preprocessing script is part of the CLAM pipeline.
 
-It takes bam file as input, separates unique- and multi-mapped reads, and
-tag the read to a specific locus given a tagging method.
+This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
+reads passing QC, splits the input bam file by sorting them into `unique.sorted.bam` and `multi.sorted.bam`, 
+and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
 
-Tested under python 2.7.3
+Note that you can also run `CLAM realigner` directly, which will call `preprocessor` and automatically determine
+if `preprocessor` has been called in the output folder. 
+
+If you don't want to run `realigner`, you can also run `peakcaller` directly after `preprocessor`.
+
+Example run:
+	```
+	CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
+	```
+
+Tested under python 2.7
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 __email__ = 'zj.z@ucla.edu'
 
 import os
@@ -27,7 +37,16 @@ import inspect
 
 logger = logging.getLogger('CLAM.Preprocessor')
 
-def read_tagger(alignment, method='median'):
+
+def alignment_mutation(x, mut_ref, mut_obs):
+	"""DOCSTRING
+	Need to read reference genome
+	NotImplemented
+	"""	
+	raise NotImplementedError()
+
+
+def read_tagger(alignment, method='median', **kwargs):
 	""" tag a read alignment to a genomic locus
 	Args:
 	Returns:
@@ -36,7 +55,11 @@ def read_tagger(alignment, method='median'):
 		# center of the read; must dicard junction reads
 		'median': lambda x: -1 if 'N' in x.cigarstring else int(np.median(x.positions))+1,
 		# start site of the read; trunction in iCLIP/eCLIP
-		'start': lambda x: x.positions[-1] if x.is_reverse else x.positions[0]+1
+		'start': lambda x: x.positions[-1] if x.is_reverse else x.positions[0]+1,
+		# extend from 5' site to certain length; need kwargs
+		'extend': lambda x: x.positions[-1]-kwargs['ext_len'] if x.is_reverse else x.positions[0]+kwargs['ext_len'],
+		# mutation tag a specific mutation type
+		'mutation': lambda x: alignment_mutation(x, kwargs['mut_ref'], kwargs['mut_obs'])
 		}
 	try:
 		tag=tagger_func[method](alignment)
@@ -46,7 +69,7 @@ def read_tagger(alignment, method='median'):
 
 
 
-def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger, omit_detail=True):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=True):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:
@@ -58,6 +81,7 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger, omi
 	for i in args:
 		msg += "%s = %s \n"%(i, values[i])
 	logger.info(msg)
+	read_tagger=lambda x: read_tagger(x, method=read_tagger_method)
 	logger.info('filtering input bam')
 	
 	in_bam = pysam.Samfile(filename,'rb')
@@ -119,9 +143,9 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger, omi
 		mbam.close()
 		
 		# sorting
-		pysam.sort('-m', '4G', '-@', '4', '-T', os.path.dirname(sorted_ubam_fn), '-o', sorted_ubam_fn, ubam_fn)
+		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_ubam_fn), '-o', sorted_ubam_fn, ubam_fn)
 		os.remove(ubam_fn)
-		pysam.sort('-m', '4G', '-@', '4', '-T', os.path.dirname(sorted_mbam_fn), '-o', sorted_mbam_fn, mbam_fn)
+		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_mbam_fn), '-o', sorted_mbam_fn, mbam_fn)
 		os.remove(mbam_fn)
 		pysam.index(sorted_ubam_fn)
 		pysam.index(sorted_mbam_fn)
@@ -251,7 +275,7 @@ def parser(args):
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		filter_bam_multihits(in_bam, max_hits=max_hits, max_tags=max_tags, out_dir=out_dir, 
-			read_tagger=lambda x: read_tagger(x, method=tag_method))
+			read_tagger_method=tag_method)
 		
 		logger.info('end')
 	except KeyboardInterrupt():

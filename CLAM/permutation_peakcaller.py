@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 
-"""
-This peak-caller script is part of the CLAM pipeline.
+"""This peak-caller script is part of the CLAM pipeline.
 
-It takes input from re-aligner output, and use permutation to call peaks.
+This subcommand will call peaks using permutation by randomly placing reads along the gene.
+More details about the permutation procedure is described in our NAR paper.
+
+Example run:
+	```
+	CLAM permutation_callpeak -i path/to/outdir/unique.sorted.bam path/to/outdir/realigned.sorted.bam \
+	-o path/to/peaks/outdir -p 8 \
+	--gtf path/to/gencode.v19.annotation.gtf
+	```
 
 Tested under python 2.7.3
 """

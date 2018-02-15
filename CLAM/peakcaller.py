@@ -1,9 +1,23 @@
 #!/usr/bin/env python
 
-"""
-This peak-caller script is part of the CLAM pipeline.
+"""This peak-caller script is part of the CLAM pipeline.
 
-It takes input from re-aligner output, and use permutation to call peaks.
+This subcommand (new in v1.1) will call peaks by looking for bins enriched with IP reads over control, specifying a 
+Negative-binomial model on observed read counts.
+
+Note we can specify both `unique.sorted.bam` (from `preprocessor`) and `realigned.sorted.bam` (from `realigner`) and 
+separte the two file paths by a space, to call peaks using the combination of uniquely- and multi-mapped reads.
+
+Alternatively, we can also only input `unique.sorted.bam`; this will allow CLAM to call peaks using only uniquely-
+mapped reads.
+
+Example run:
+	```
+	CLAM peakcaller -i path/to/IP/outdir/unique.sorted.bam path/to/IP/outdir/realigned.sorted.bam \
+	-c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
+	-o path/to/peaks/outdir --unstranded --binsize 100 \
+	--gtf path/to/gencode.v19.annotation.gtf
+	```
 
 Tested under python 2.7.3
 """
@@ -77,9 +91,25 @@ def count_gene_read_tags(bam_list, gene, is_unique=True, unstranded=False):
 			read_tags = [ (x.opt('RT'), 1.0) for x in bam.fetch(chr, start, end) \
 				if unstranded or x.is_reverse==is_reverse]
 		else:
-			read_tags = [ (x.opt('RT'), x.opt('AS')) for x in bam.fetch(chr, start, end) \
-				if unstranded or x.is_reverse==is_reverse]
-		
+			#read_tags = [ (x.opt('RT'), x.opt('AS')) for x in bam.fetch(chr, start, end) \
+			#	if unstranded or x.is_reverse==is_reverse]
+			## UPDATE 1.22.2018: I noted in certain genes with rRNA, when considering 
+			## multi-mapped reads, the memory usage will significantly increase just for
+			## that single gene, rendering `MemoryError` even on single threads
+			## This is especially a problem for RIP-seq controls.
+			## For now, let's set a very high threshold for maximum number of tags in any
+			## given gene. This should not cause any problem in CLIP-seq, and should
+			## not affect too much results.
+			## If this happens, will log a INFO-level message in the log
+			counter = 0
+			read_tags = []
+			for x in bam.fetch(chr, start, end):
+				counter += 1
+				if unstranded or x.is_reverse==is_reverse:
+					read_tags.append([x.opt('RT'), x.opt('AS')])
+				if counter > 0.5*10**8:
+					logger.info("too many mreads (>50million) on %s, probably rRNA gene - discarded"%(':'.join([chr,strand,str(start),str(end)])))
+					return interval
 		for tag in read_tags:
 			if tag[0]<start or tag[0]>=end:
 				continue
