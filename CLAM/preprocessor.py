@@ -46,7 +46,7 @@ def alignment_mutation(x, mut_ref, mut_obs):
 	raise NotImplementedError()
 
 
-def read_tagger(alignment, method='median', **kwargs):
+def read_tagger_collection(alignment, method='median', **kwargs):
 	""" tag a read alignment to a genomic locus
 	Args:
 	Returns:
@@ -81,7 +81,7 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 	for i in args:
 		msg += "%s = %s \n"%(i, values[i])
 	logger.info(msg)
-	read_tagger=lambda x: read_tagger(x, method=read_tagger_method)
+	read_tagger=lambda x: read_tagger_collection(x, method=read_tagger_method)
 	logger.info('filtering input bam')
 	
 	in_bam = pysam.Samfile(filename,'rb')
