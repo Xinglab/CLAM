@@ -32,7 +32,7 @@ import datetime
 import bisect
 import argparse as ap
 import inspect
-from CLAM.preprocessor import *
+from .preprocessor import *
 
 logger = logging.getLogger('CLAM.Realigner')
 

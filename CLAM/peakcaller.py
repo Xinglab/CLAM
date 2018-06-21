@@ -40,7 +40,7 @@ from scipy.stats import fisher_exact, poisson, chi2
 import scipy.optimize as optimize
 from tqdm import tqdm
 import datetime
-from CLAM.stats import ztnb_em, bin_test_alternatives
+from .stats import ztnb_em, bin_test_alternatives
 from multiprocessing import Pool
 import argparse as ap
 import inspect
@@ -185,7 +185,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	ip_sum = np.apply_along_axis(np.sum, 1, intv_bin_ip)
 	con_sum = np.apply_along_axis(np.sum, 1, intv_bin_con)
 	if any(ip_sum==0) or any(con_sum==0):
-		return None, None
+		return None, None, None
 	
 	# compute the dispersion parameters
 	min_alpha = 0.001 ## small alpha reduces to Poisson
@@ -281,7 +281,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	adj = multipletests(binscore[~ np.isnan(binscore)], alpha=0.05, method=correction_method)
 	binscore_adj = np.asarray(binscore)
 	binscore_adj[ ~ np.isnan(binscore) ] = adj[1]
-	return binsignal, binscore_adj
+	return binsignal, binscore_adj, binscore
 
 
 def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.]):
@@ -327,7 +327,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	intv_bin_con = bin_interval_counts(interval_con, binsize=binsize)
 	
 	# perform statistical test
-	signal_val, binscore_adj = test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=with_control)
+	signal_val, binscore_adj, binscore = test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=with_control)
 	#if with_control or intv_bin_ip.shape[0]>1:
 	#	signal_val, binscore_adj = test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=with_control)
 	#else:
@@ -340,7 +340,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	## "narrowPeak" format from 
 	## https://genome.ucsc.edu/FAQ/FAQformat.html#format12
 	## chr start end name 1000 strand signalValue pVal qVal peak
-	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t.\t%.3e\t.\n"
+	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t%.3e\t%.3e\t.\n"
 	BED = ''
 	if len(fold_change)==1:
 		lb = np.log(fold_change[0]) if with_control else fold_change[0]
@@ -359,7 +359,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 			binend = gene[1] + (i+1)*binsize
 			strand = gene[3]
 			gene_name = gene[4]
-			BED += narrowPeak_formatter % (chr, binstart, binend, gene_name, strand, signal, qval)
+			BED += narrowPeak_formatter % (chr, binstart, binend, gene_name, strand, signal, pval, qval)
 	return BED
 	
 
