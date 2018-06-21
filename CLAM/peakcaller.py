@@ -351,6 +351,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 		ub = np.log(fold_change[1]) if with_control else fold_change[1]
 	for i in range(len(binscore_adj)):
 		qval = binscore_adj[i]
+		pval = binscore[i]
 		signal = signal_val[i]
 		num_signal = float(signal) if with_control else np.mean([float(x) for x in signal.split(',')])
 		if qval < qval_cutoff and num_signal > lb and num_signal < ub :
