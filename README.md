@@ -157,7 +157,7 @@ the output will be either "narrow_peak.unique.bed" for peaks called using only u
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
 ## Testing data
-Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](http://www.mimg.ucla.edu/faculty/xing/CLAM/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam).
+Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](https://xinglab.cass.idre.ucla.edu/public/zijun/CLAM/test_data/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam).
 
 Then run CLAM on the dataset; if finished correctly, you should have rescued peaks at these two loci:
 
