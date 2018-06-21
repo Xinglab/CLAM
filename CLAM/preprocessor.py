@@ -33,6 +33,10 @@ import bisect
 import argparse as ap
 import inspect
 
+__author__ = 'Zijun Zhang'
+__version__ = '1.1.2'
+__email__ = 'zj.z@ucla.edu'
+
 logger = logging.getLogger('CLAM.Preprocessor')
 
 

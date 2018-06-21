@@ -30,6 +30,9 @@ Foundation, either version 3 of the License, or (at your option) any later
 version
 """
 
+__author__ = 'Zijun Zhang'
+__version__ = '1.1.2'
+__email__ = 'zj.z@ucla.edu'
 
 import os
 import sys
