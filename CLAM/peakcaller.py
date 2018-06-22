@@ -237,7 +237,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 		pseudo_count = min(1., np.sum(intv_bin_con)/intv_bin_con.shape[1])
 	except:
 		pseudo_count = 1.
-	beta_bound = np.log(pseudo_count/np.min([ip_sum, con_sum]))
+	beta_bound = np.log(pseudo_count/np.min(np.concatenate([ip_sum, con_sum])))
 	# perform test on each bin
 	for i in range(intv_counter):
 		this_ip = intv_bin_ip[:, i]
