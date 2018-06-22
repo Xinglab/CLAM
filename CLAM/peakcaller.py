@@ -232,7 +232,11 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	# this is important:
 	# we need to bound the beta parameter, so if the current bin is zero it will be
 	# penalized by likelihood
-	pseudo_count = 1.
+	# Changed Jun.21.2018: for sparse CLIP-seq data, use a smaller pseudo_count
+	try:
+		pseudo_count = min(1., np.sum(con_sum)/intv_bin_con.shape[1])
+	except:
+		pseudo_count = 1.
 	beta_bound = np.log(pseudo_count/np.min([ip_sum, con_sum]))
 	# perform test on each bin
 	for i in range(intv_counter):
@@ -266,7 +270,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 				fun=_neg_loglik_unconstrain,
 				args=(data),
 				method='l-bfgs-b',
-				bounds = [(beta_bound, abs(beta_bound))] + [(-100,100)]+[(0.1,10)]*(this_ip.shape[0]+others_ip.shape[0]),
+				bounds = [(beta_bound, abs(beta_bound))] + [(-100,100)] + [(0.1,10)]*(this_ip.shape[0]+others_ip.shape[0]),
 				options={'disp':False}
 			)
 		
@@ -281,7 +285,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	
 	# correcting for multiple-testing
 	adj = multipletests(binscore[~ np.isnan(binscore)], alpha=0.05, method=correction_method)
-	binscore_adj = np.asarray(binscore)
+	binscore_adj = np.copy(binscore)
 	binscore_adj[ ~ np.isnan(binscore) ] = adj[1]
 	return binsignal, binscore_adj, binscore
 
