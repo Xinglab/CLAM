@@ -351,6 +351,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 		assert fold_change[0]<fold_change[1]
 		lb = np.log(fold_change[0]) if with_control else fold_change[0]
 		ub = np.log(fold_change[1]) if with_control else fold_change[1]
+	peak_num = 0
 	for i in range(len(binscore_adj)):
 		qval = binscore_adj[i]
 		pval = binscore[i]
@@ -361,8 +362,9 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 			binstart = gene[1] + i*binsize
 			binend = gene[1] + (i+1)*binsize
 			strand = gene[3]
-			gene_name = gene[4]
-			BED += narrowPeak_formatter % (chr, binstart, binend, gene_name, strand, signal, pval, qval)
+			peak_num += 1
+			peak_name = gene[4] + '-%i'%peak_num
+			BED += narrowPeak_formatter % (chr, binstart, binend, peak_name, strand, signal, pval, qval)
 	return BED
 	
 
