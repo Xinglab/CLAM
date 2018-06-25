@@ -232,11 +232,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	# this is important:
 	# we need to bound the beta parameter, so if the current bin is zero it will be
 	# penalized by likelihood
-	# Changed Jun.21.2018: for sparse CLIP-seq data, use a smaller pseudo_count
-	try:
-		pseudo_count = min(1., max(0.1, np.sum(intv_bin_con)/intv_bin_con.shape[1]))
-	except:
-		pseudo_count = 1.
+	pseudo_count = 1.
 	beta_bound = np.log(pseudo_count/np.min(np.concatenate([ip_sum, con_sum])))
 	# perform test on each bin
 	for i in range(intv_counter):
