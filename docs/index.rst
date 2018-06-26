@@ -1,5 +1,5 @@
 .. CLAM documentation master file, created by
-   sphinx-quickstart on Mon Jun 25 23:26:31 2018.
+   sphinx-quickstart on Mon Jun 25 23:36:42 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
