@@ -34,7 +34,7 @@ import argparse as ap
 import inspect
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 __email__ = 'zj.z@ucla.edu'
 
 logger = logging.getLogger('CLAM.Preprocessor')
