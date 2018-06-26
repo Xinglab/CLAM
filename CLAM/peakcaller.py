@@ -253,20 +253,20 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 			}
 		## constrained likelihood
 		res_constrain = optimize.minimize(
-				x0=np.ones(1+this_ip.shape[0]+others_ip.shape[0]), # beta + mu_vec 
+				x0=np.ones(1+this_ip.shape[0]+this_con.shape[0]), # beta + mu_vec 
 				fun=_neg_loglik_constrain,
 				args=(data),
 				method='l-bfgs-b',
-				bounds = [(beta_bound, abs(beta_bound) )]+[(0.1,10)]*(this_ip.shape[0]+others_ip.shape[0]),
+				bounds = [(beta_bound, abs(beta_bound) )]+[(0.1,10)]*(this_ip.shape[0]+this_con.shape[0]),
 				options={'disp':False}
 			)
 		## unconstrained likelihood
 		res_unconstrain = optimize.minimize(
-				x0=np.ones(2+this_ip.shape[0]+others_ip.shape[0]), # beta + delta + mu_vec
+				x0=np.ones(2+this_ip.shape[0]+this_con.shape[0]), # beta + delta + mu_vec
 				fun=_neg_loglik_unconstrain,
 				args=(data),
 				method='l-bfgs-b',
-				bounds = [(beta_bound, abs(beta_bound))] + [(-100,100)] + [(0.1,10)]*(this_ip.shape[0]+others_ip.shape[0]),
+				bounds = [(beta_bound, abs(beta_bound))] + [(-100,100)] + [(0.1,10)]*(this_ip.shape[0]+this_con.shape[0]),
 				options={'disp':False}
 			)
 		
