@@ -551,7 +551,7 @@ def parser(args):
 		binsize = args.binsize
 		qval_cutoff = args.qval_cutoff
 		fold_change = args.fold_change
-		min_clip_cov = argv.min_clip_cov
+		min_clip_cov = args.min_clip_cov
 		pool = args.pool
 		logger = logging.getLogger('CLAM.Peakcaller')
 		logger.info('start')
