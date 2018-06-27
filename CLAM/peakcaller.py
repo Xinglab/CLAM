@@ -286,7 +286,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	return binsignal, binscore_adj, binscore
 
 
-def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.], min_clip_cov=0, pool=False):
+def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.], min_clip_cov=0, pooling=False):
 	"""DOCSTRING
 	Args
 	Returns
@@ -300,9 +300,9 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 			count_gene_read_tags(bam_dict['ubam.ip'], gene, is_unique=True, unstranded=unstranded) + \
 			count_gene_read_tags(bam_dict['mbam.ip'], gene, is_unique=False, unstranded=unstranded)
 	
-	# pool reads from different replicate if provided multiple replicates
-	# and pooling is turned on
-	if interval_ip.shape[0]>1 and pool:
+	# pooling reads from different replicate if provided multiple replicates
+	# and poolinging is turned on
+	if interval_ip.shape[0]>1 and pooling:
 		interval_ip = np.apply_along_axis(np.sum, 0, interval_ip).reshape((1, interval_ip.shape[1]))
 	
 	# skip if there are not enough reads
@@ -332,9 +332,9 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 		#	interval_con[i, ] = \
 		#		np.ones((interval_ip.shape[1]))*np.sum(interval_ip[i,])/interval_ip.shape[1]
 	
-	# pool reads from different replicate if provided multiple replicates
-	# and pooling is turned on
-	if interval_con.shape[0]>1 and pool:
+	# pooling reads from different replicate if provided multiple replicates
+	# and poolinging is turned on
+	if interval_con.shape[0]>1 and pooling:
 		interval_con = np.apply_along_axis(np.sum, 0, interval_con).reshape((1, interval_con.shape[1]))
 
 	
@@ -384,7 +384,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	return BED
 	
 
-def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pool) ):
+def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling) ):
 	"""DOCSTRING
 	Args
 	Returns
@@ -404,7 +404,7 @@ def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot,
 		BED += call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
 				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change,
-				min_clip_cov=min_clip_cov, pool=pool)
+				min_clip_cov=min_clip_cov, pooling=pooling)
 	# close the handler
 	_ = map(lambda x: x.close(), [bam for x in bam_dict.values() for bam in x])
 	return BED
@@ -454,7 +454,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 		out_dir='.', binsize=50,
 		unique_only=False, unstranded=True,
 		qval_cutoff=0.05, fold_change=[2.], 
-		min_clip_cov=0, pool=False):
+		min_clip_cov=0, pooling=False):
 	"""DOCSTRING
 	Args:
 	Returns:
@@ -495,7 +495,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 			BED = call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
 				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change,
-				min_clip_cov=min_clip_cov, pool=pool)
+				min_clip_cov=min_clip_cov, pooling=pooling)
 			ofile.write(BED)
 			#print BED
 			peak_counter += len(BED.split('\n'))-1
@@ -511,7 +511,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 		pool=Pool(processes=nthread)
 		BED_list = pool.map(
 			_child_peak_caller, 
-			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pool) for i in range(nthread)]
+			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling) for i in range(nthread)]
 			)
 		pool.terminate()
 		pool.join()
@@ -552,7 +552,7 @@ def parser(args):
 		qval_cutoff = args.qval_cutoff
 		fold_change = args.fold_change
 		min_clip_cov = args.min_clip_cov
-		pool = args.pool
+		pooling = args.pooling
 		logger = logging.getLogger('CLAM.Peakcaller')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
@@ -563,7 +563,7 @@ def parser(args):
 			qval_cutoff=qval_cutoff,
 			fold_change=fold_change,
 			min_clip_cov=min_clip_cov,
-			pool=pool)
+			pooling=pooling)
 		
 		logger.info('end')
 	except KeyboardInterrupt():

@@ -209,7 +209,7 @@ def add_peakcaller_parser( subparsers ):
 	ag_peakcaller.add_argument("-u", "--unique-only", dest="unique_only", default=False, action='store_true',
 		help="Call peaks using only unique-mapped reads when turned on")
 	
-	ag_peakcaller.add_argument("--pool", dest="pool", default=False, action="store_true",
+	ag_peakcaller.add_argument("--pool", dest="pooling", default=False, action="store_true",
 		help="Pool the read counts if provided with multiple replicates; default: False")
 	
 	ag_peakcaller.add_argument("--min-clip-cov", dest="min_clip_cov", type=int, default=4,
