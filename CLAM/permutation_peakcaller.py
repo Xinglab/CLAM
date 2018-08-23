@@ -11,13 +11,16 @@ Example run:
 	-o path/to/peaks/outdir -p 8 \
 	--gtf path/to/gencode.v19.annotation.gtf
 	```
+Author:
+	Zijun Zhang <zj.z@ucla.edu>
 
 Tested under python 2.7.3
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.1'
+__version__ = '1.1.3'
 __email__ = 'zj.z@ucla.edu'
+
 
 import os
 import sys

@@ -1,7 +1,5 @@
-# CLAM Version 1.1.2
+# CLAM Version 1.1.3
 # CLIP-seq Analysis of Multi-mapped reads
-
-## Download the latest version [here](https://github.com/Xinglab/CLAM/releases/download/v1.1.1-beta/CLAM_v1.1.1.zip).
 
 ## Table of Contents
  - [Introduction](#introduction) 
@@ -159,7 +157,7 @@ the output will be either "narrow_peak.unique.bed" for peaks called using only u
 ## Testing data
 Once downloaded the CLAM source code, please download the hnRNPC iCLIP dataset from [here](https://xinglab.cass.idre.ucla.edu/public/zijun/CLAM/test_data/hnRNPC_iCLIP_rep1_E-MAT-1371_novoalign.sorted.bam).
 
-Then run CLAM on the dataset; if finished correctly, you should have rescued peaks at these two loci:
+Then run CLAM by using `realigner` and `permutation_peakcaller` on the dataset; if finished correctly, you should have rescued peaks at these two loci:
 
 chr11:82,624,179-82,626,008
 
@@ -173,11 +171,8 @@ Zijun Zhang [zj.z@ucla.edu](mailto:zj.z@ucla.edu)
 
 Yi Xing [yxing@ucla.edu](mailto:yxing@ucla.edu)
 
-If you found a bug or mistake in this project, we would like to know about it. Before you send us the bug report though, please check the following:
+If you found a bug or mistake in this project, we would like to know about it. 
 
-1. Are you using the latest version? The bug you found may already have been fixed.
-2. Check that your input is in the correct format and you have selected the correct options.
-3. Please reduce your input to the smallest possible size that still produces the bug; we will need your input data to reproduce the problem, and the smaller you can make it, the easier it will be.
 
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 

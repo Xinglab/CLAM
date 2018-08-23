@@ -15,13 +15,11 @@ Example run:
 	```
 	CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
 	```
+Author:
+	Zijun Zhang <zj.z@ucla.edu>
 
 Tested under python 2.7
 """
-
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.2'
-__email__ = 'zj.z@ucla.edu'
 
 import os
 import sys
@@ -34,6 +32,10 @@ import datetime
 import bisect
 import argparse as ap
 import inspect
+
+__author__ = 'Zijun Zhang'
+__version__ = '1.1.3'
+__email__ = 'zj.z@ucla.edu'
 
 logger = logging.getLogger('CLAM.Preprocessor')
 
@@ -69,7 +71,7 @@ def read_tagger_collection(alignment, method='median', **kwargs):
 
 
 
-def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=True):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=False):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:

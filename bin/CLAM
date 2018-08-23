@@ -31,9 +31,8 @@ version
 """
 
 __author__ = 'Zijun Zhang'
-__version__ = '1.1.1'
+__version__ = '1.1.3'
 __email__ = 'zj.z@ucla.edu'
-
 
 import os
 import sys
@@ -194,8 +193,8 @@ def add_peakcaller_parser( subparsers ):
 	ag_peakcaller.add_argument("-i", "--input", dest="in_bam", nargs='+', type=str, required=True,
 		help="Filepaths for IP bam files, e.g ubam1,ubam2 mbam1,mbam2")
 	
-	ag_peakcaller.add_argument("-c", "--control-dir", dest="con_bam", nargs='+', type=str, default=None,
-		help="Filepaths for control; default: None")
+	ag_peakcaller.add_argument("-c", "--control-dir", dest="con_bam", nargs='+', type=str, required=True,
+		help="Filepaths for control bam files")
 	
 	ag_peakcaller.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
 		help="Output folder")
@@ -209,6 +208,12 @@ def add_peakcaller_parser( subparsers ):
 	
 	ag_peakcaller.add_argument("-u", "--unique-only", dest="unique_only", default=False, action='store_true',
 		help="Call peaks using only unique-mapped reads when turned on")
+	
+	ag_peakcaller.add_argument("--pool", dest="pooling", default=False, action="store_true",
+		help="Pool the read counts if provided with multiple replicates; default: False")
+	
+	ag_peakcaller.add_argument("--min-clip-cov", dest="min_clip_cov", type=int, default=4,
+		help="Minimum CLIP reads per gene to perform analysis; default: 4")
 	
 	# callpeak
 	ag_peakcaller.add_argument("--qval-cutoff", dest="qval_cutoff", type=float, default=0.05,
