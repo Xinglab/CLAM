@@ -193,8 +193,8 @@ def add_peakcaller_parser( subparsers ):
 	ag_peakcaller.add_argument("-i", "--input", dest="in_bam", nargs='+', type=str, required=True,
 		help="Filepaths for IP bam files, e.g ubam1,ubam2 mbam1,mbam2")
 	
-	ag_peakcaller.add_argument("-c", "--control-dir", dest="con_bam", nargs='+', type=str, default=None,
-		help="Filepaths for control; default: None")
+	ag_peakcaller.add_argument("-c", "--control-dir", dest="con_bam", nargs='+', type=str, required=True,
+		help="Filepaths for control bam files")
 	
 	ag_peakcaller.add_argument("-o", "--out-dir", dest="out_dir", type=str, required=True,
 		help="Output folder")

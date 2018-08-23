@@ -71,7 +71,7 @@ def read_tagger_collection(alignment, method='median', **kwargs):
 
 
 
-def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=True):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=False):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:
