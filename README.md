@@ -171,11 +171,8 @@ Zijun Zhang [zj.z@ucla.edu](mailto:zj.z@ucla.edu)
 
 Yi Xing [yxing@ucla.edu](mailto:yxing@ucla.edu)
 
-If you found a bug or mistake in this project, we would like to know about it. Before you send us the bug report though, please check the following:
+If you found a bug or mistake in this project, we would like to know about it. 
 
-1. Are you using the latest version? The bug you found may already have been fixed.
-2. Check that your input is in the correct format and you have selected the correct options.
-3. Please reduce your input to the smallest possible size that still produces the bug; we will need your input data to reproduce the problem, and the smaller you can make it, the easier it will be.
 
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
