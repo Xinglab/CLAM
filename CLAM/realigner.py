@@ -410,7 +410,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
 		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
-			omit_detail=True)
+			omit_detail=False)
 	else:
 		logger.info("found existing bams; skipped tagging.")
 
