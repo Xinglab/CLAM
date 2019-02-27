@@ -148,7 +148,12 @@ def add_preprocessor_parser( subparsers ):
 	
 	ag_prep.add_argument("--max-tags", dest="max_tags", type=int, default=-1,
 		help="The maximum identical tags at given location; default: -1, no filter")
-	
+
+	# strandness
+	ag_prep.add_argument("--strandness", dest="strandness", type=str, 
+		default="same", choices=['same', 'opposite', 'none'],
+		help="The expected read strandness with transcription direction: same, opposite, or none(i.e. unstranded); default: same")
+
 	return
 
 
@@ -180,8 +185,12 @@ def add_realigner_parser( subparsers ):
 	ag_realigner.add_argument("--winsize", dest="winsize", type=int, default=50,
 		help="Local window size for em computations; default: 50")
 
-	ag_realigner.add_argument("--unstranded", dest="unstranded", default=False, action="store_true",
-		help="Unstranded alignments if turned on")
+	#ag_realigner.add_argument("--unstranded", dest="unstranded", default=False, action="store_true",
+	#	help="Unstranded alignments if turned on")
+
+	ag_realigner.add_argument("--strandness", dest="strandness", type=str, 
+		default="same", choices=['same', 'opposite', 'none'],
+		help="The expected read strandness with transcription direction: same, opposite, or none(i.e. unstranded); default: same")
 	
 	return
 

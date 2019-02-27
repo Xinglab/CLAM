@@ -382,8 +382,9 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 
 
 def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='median', 
-		winsize=50, unstranded=False, retag=False):
+		winsize=50, unstranded=False, retag=False, strandness="same"):
 	"""The main entry for CLAM-realigner.
+
 	Args:
 		in_bam (str): filepath for input bam
 		out_dir (str): filepath for CLAM output folder
@@ -394,6 +395,9 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		winsize (int): window size 
 		unstranded (bool): ignore alignment strand info if turned on
 		retag (bool): force to call `preprocessor` to process `in_bam` if turned on
+		strandness (str): specifies if the expected read alignment strand is `same` with 
+			transcript strand, or `opposite`, or `none` i.e. unstranded
+	
 	Returns:
 		None
 	"""
@@ -410,7 +414,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
 		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
-			omit_detail=False)
+			strandness=strandness)
 	else:
 		logger.info("found existing bams; skipped tagging.")
 
@@ -503,14 +507,14 @@ def parser(args):
 		max_tags = args.max_tags
 		retag = args.retag
 		winsize = args.winsize
-		unstranded = args.unstranded
+		strandness = args.strandness
+		unstranded = strandness == "none"
 		
-		#logger = logging.getLogger('CLAM.Realigner')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		realigner(in_bam, out_dir, max_hits=max_hits, max_tags=max_tags, read_tagger_method=tag_method, 
-			winsize=winsize, unstranded=unstranded, retag=retag)
+			winsize=winsize, unstranded=unstranded, retag=retag, strandness=strandness)
 		
 		logger.info('end')
 	except KeyboardInterrupt():

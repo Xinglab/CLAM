@@ -71,7 +71,7 @@ def read_tagger_collection(alignment, method='median', **kwargs):
 
 
 
-def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, omit_detail=False):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, strandness):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:
@@ -128,6 +128,10 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 			tagged_read.template_length = read.template_length
 			tagged_read.query_qualities = pysam.qualitystring_to_array("<")
 			tagged_read.tags = read.tags
+
+			# add strandness check
+			if strandness != "none":
+				tagged_read.is_reverse = read.is_reverse ^ strandness!="same"
 			
 			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
 				#try:
@@ -271,13 +275,15 @@ def parser(args):
 		max_hits = args.max_hits
 		## Note: if specified max_tags, need pre-sorted bam
 		max_tags = args.max_tags
+		strandness = args.strandness
 		
 		#logger = logging.getLogger('CLAM.Preprocessor')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		filter_bam_multihits(in_bam, max_hits=max_hits, max_tags=max_tags, out_dir=out_dir, 
-			read_tagger_method=tag_method)
+			read_tagger_method=tag_method,
+			strandness=strandness)
 		
 		logger.info('end')
 	except KeyboardInterrupt():
