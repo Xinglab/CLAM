@@ -26,7 +26,7 @@ import sys
 import pysam
 import numpy as np
 from collections import defaultdict
-from tqdm import tqdm
+#from tqdm import tqdm
 import logging
 import datetime
 import bisect
@@ -99,10 +99,6 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 	mbam=pysam.Samfile(mbam_fn, 'wb', template=in_bam)
 	mread_set = set()
 	
-	# do not omit sequences if to filter max_tags
-	if max_tags>0:
-		omit_detail=False
-	
 	# splitting unique and multi- reads
 	# and add the read taggers we need
 	if not \
@@ -121,24 +117,28 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 			if read_tag==-1:
 				continue
 			read.tags += [('RT', read_tag)] ## add the tag
-			
-			## omit the details in read sequence and quality
-			## recommended for larger bam because this
-			## can save some memory/storage for large bams
-			if omit_detail:
-				read.query_sequence = '*'
-				read.query_qualities = '0'
+			tagged_read = pysam.AlignedSegment()
+			tagged_read.query_name = read.query_name
+			tagged_read.query_sequence = 'N'
+			tagged_read.flag = read.flag
+			tagged_read.reference_id = read.reference_id
+			tagged_read.reference_start = read_tag - 1  # 0-based leftmost coordinate
+			tagged_read.mapping_quality = read.mapping_quality
+			tagged_read.cigar = ((0,1),)
+			tagged_read.template_length = read.template_length
+			tagged_read.query_qualities = pysam.qualitystring_to_array("<")
+			tagged_read.tags = read.tags
 			
 			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
-				try:
-					if read.opt("NH") < max_hits:
-						mbam.write(read)
-						mread_set.add(read.qname)
-				except KeyError:
-					#print read
-					raise Exception('%s: missing NH tag when is_secondary=%s'%(read.qname,read.is_secondary))
+				#try:
+				if read.opt("NH") < max_hits:
+					mbam.write(tagged_read)
+					mread_set.add(read.qname)
+				#except KeyError:
+				#	#print read
+				#	raise Exception('%s: missing NH tag when is_secondary=%s'%(read.qname,read.is_secondary))
 			else:
-				ubam.write(read)
+				ubam.write(tagged_read)
 				unique_counter += 1
 		
 		ubam.close()
@@ -146,9 +146,9 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 		
 		# sorting
 		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_ubam_fn), '-o', sorted_ubam_fn, ubam_fn)
-		os.remove(ubam_fn)
+		#os.remove(ubam_fn)
 		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_mbam_fn), '-o', sorted_mbam_fn, mbam_fn)
-		os.remove(mbam_fn)
+		#os.remove(mbam_fn)
 		pysam.index(sorted_ubam_fn)
 		pysam.index(sorted_mbam_fn)
 		
