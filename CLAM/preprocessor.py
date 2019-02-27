@@ -131,7 +131,7 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 
 			# add strandness check
 			if strandness != "none":
-				tagged_read.is_reverse = read.is_reverse ^ strandness!="same"
+				tagged_read.is_reverse = (read.is_reverse) ^ (strandness!="same")
 			
 			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
 				#try:
