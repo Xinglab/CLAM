@@ -150,9 +150,9 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 		
 		# sorting
 		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_ubam_fn), '-o', sorted_ubam_fn, ubam_fn)
-		#os.remove(ubam_fn)
+		os.remove(ubam_fn)
 		pysam.sort('-m', '4G', '-@', '3', '-T', os.path.dirname(sorted_mbam_fn), '-o', sorted_mbam_fn, mbam_fn)
-		#os.remove(mbam_fn)
+		os.remove(mbam_fn)
 		pysam.index(sorted_ubam_fn)
 		pysam.index(sorted_mbam_fn)
 		
