@@ -125,9 +125,9 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 			## omit the details in read sequence and quality
 			## recommended for larger bam because this
 			## can save some memory/storage for large bams
-			if omit_detail:
-				read.query_sequence = '*'
-				read.query_qualities = '0'
+			#if omit_detail:
+			#	read.query_sequence = '*'
+			#	read.query_qualities = '0'
 			
 			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
 				try:
@@ -234,8 +234,8 @@ def filter_bam_maxtags(obam_fn, ibam_fn, max_tags=1):
 				last_pos = read.positions[0]
 				stack = [read]
 				for new_alignment in new_alignment_list:
-					new_alignment.query_sequence = '*'
-					new_alignment.query_qualities = '0'
+					#new_alignment.query_sequence = '*'
+					#new_alignment.query_qualities = '0'
 					_ = obam.write(new_alignment)
 			else:
 				stack.append(read)
@@ -243,8 +243,8 @@ def filter_bam_maxtags(obam_fn, ibam_fn, max_tags=1):
 		output_counter += len(new_alignment_list)
 		last_pos = read.positions[0]
 		for new_alignment in new_alignment_list:
-			new_alignment.query_sequence = '*'
-			new_alignment.query_qualities = '0'
+			#new_alignment.query_sequence = '*'
+			#new_alignment.query_qualities = '0'
 			_ = obam.write(new_alignment)
 	ibam.close()
 	obam.close()
