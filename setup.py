@@ -5,7 +5,7 @@ from setuptools import setup
 
 def main():
 	setup(name='CLAM',
-		version='1.1.4',
+		version='1.2.0-beta',
 		description='CLIP-seq Analysis of Multi-mapped reads',
 		author='Zijun Zhang',
 		author_email='zj.z@ucla.edu',
@@ -13,7 +13,7 @@ def main():
 		packages=['CLAM', 'CLAM.stats'],
 		scripts=['bin/CLAM'],
 		install_requires=[
-			'pysam>0.12,<0.2',
+			#'pysam>0.12,<0.2',
 			'numpy']
 		 )
 	return

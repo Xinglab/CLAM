@@ -20,6 +20,8 @@ Author:
 
 Tested under python 2.7
 """
+from . import config
+__version__ = config.__version__
 
 import os
 import sys
@@ -33,9 +35,6 @@ import bisect
 import argparse as ap
 import inspect
 
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.3'
-__email__ = 'zj.z@ucla.edu'
 
 logger = logging.getLogger('CLAM.Preprocessor')
 
@@ -128,6 +127,8 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 			tagged_read.template_length = read.template_length
 			tagged_read.query_qualities = pysam.qualitystring_to_array("<")
 			tagged_read.tags = read.tags
+			read_len = sum([i[1] for i in read.cigar if i[0]==0])
+			tagged_read.tags += [('RL', read_len)]
 
 			# add strandness check
 			if strandness != "none":

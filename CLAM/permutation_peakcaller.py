@@ -17,9 +17,8 @@ Author:
 Tested under python 2.7.3
 """
 
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.3'
-__email__ = 'zj.z@ucla.edu'
+from . import config
+__version__ = config.__version__
 
 
 import os
@@ -466,11 +465,10 @@ def read_tid_frag_from_bam(tid, bamfile, is_stranded, is_unique):
 					continue
 			except:
 				continue
-		#try:
-		#	read_length = read.qlen
-		#except:
-		#	read_length = read.positions[-1] - read.positions[0] + 1
-		read_length = read.positions[-1] - read.positions[0] + 1
+		try:
+			read_length = read.opt('RL')
+		except:
+			read_length = read.positions[-1] - read.positions[0] + 1
 		
 		if (not 'N' in read.cigarstring) and \
 			(read.pos-start>=0 and read_length<500):    # to avoid junction reads

@@ -18,16 +18,15 @@ Author:
 Tested under python 2.7
 """
 
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.3'
-__email__ = 'zj.z@ucla.edu'
+from . import config
+__version__ = config.__version__
 
 import os
 import sys
 import pysam
 import numpy as np
 from collections import defaultdict
-from tqdm import tqdm
+#from tqdm import tqdm
 import logging
 import datetime
 import bisect
