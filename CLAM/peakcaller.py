@@ -225,7 +225,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	for i in range(intv_bin_ip.shape[0]):
 		height = ztnb_em.collapse_data(np.floor(intv_bin_ip[i,]))
 		height[0] = 0
-		if np.sum(height.values())>0:
+		if np.sum([x for x in height.values()])>0:
 			try:
 				ll, mu, alpha = ztnb_em.EM_estim_params(height, max_iter=10, verbose=False)
 			except:
@@ -401,11 +401,13 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	return BED
 	
 
-def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling, norm_lib, tot_count_dict) ):
+#def _child_peak_caller(ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov ):
+def _child_peak_caller(args):
 	"""DOCSTRING
 	Args
 	Returns
 	"""
+	ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling, norm_lib, tot_count_dict = args
 	# open file handler for child process
 	bam_dict = make_bam_handler_dict(ip_bam_list, con_bam_list)
 	
@@ -582,7 +584,7 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 	else:
 	# multi-threading on subset of genes
 		logger.info('multi-threading')
-		gene_list = gene_annot.keys()
+		gene_list = list(gene_annot.keys())
 		child_gene_list = [x for x in chunkify(gene_list, nthread)]
 		pool=Pool(processes=nthread)
 		BED_list = pool.map(
@@ -606,7 +608,7 @@ def chunkify(a, n):
 		the chunkified index
 	"""
 	k, m = len(a) / n, len(a) % n
-	return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
+	return (a[ int(i * k + min(i, m)) :int((i + 1) * k + min(i + 1, m))] for i in range(n))
 
 
 def parser(args):
@@ -644,7 +646,7 @@ def parser(args):
 			pooling=pooling)
 		
 		logger.info('end')
-	except KeyboardInterrupt():
+	except KeyboardInterrupt:
 		sys.exit(0)
 	return
 

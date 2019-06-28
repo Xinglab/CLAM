@@ -25,7 +25,7 @@ import os
 import sys
 import pysam
 import numpy as np
-from collections import defaultdict
+from collections import defaultdict, deque
 #from tqdm import tqdm
 import logging
 import datetime
@@ -205,7 +205,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	chr_strand = chrom+':'+strand
 	idx = bisect.bisect_right(genomic_cluster_dict[chr_strand], site)
 	if not idx%2:
-		print alignment
+		print(alignment)
 		raise Exception('%s falls out of region %s'%(alignment.qname, chr_strand+':'+str(site)) )
 	start = genomic_cluster_dict[chr_strand][idx-1] - winsize
 	start = 1 if start<1 else start
@@ -216,11 +216,12 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	## fetch the reads
 	cluster_name = ':'.join([chrom, strand, str(genomic_cluster_dict[chr_strand][idx-1]), str(genomic_cluster_dict[chr_strand][idx])])
 	if not cluster_name in location_to_reads:
-		raise Exception("cannot find cluster %s in `location_to_reads`"%cluster_name)
+		raise Exception("cannot find cluster '%s' associated with read '%s' in `location_to_reads` of len %i"%(cluster_name, alignment.qname, len(location_to_reads)))
 	mread_list = location_to_reads[cluster_name]
-	del location_to_reads[cluster_name]
+	#print(alignment, cluster_name)
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
+	del location_to_reads[cluster_name]
 	
 	## find other mreads in this cluster
 	for read_x_qname in this_mread_dict_set:
@@ -228,7 +229,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 			discarded_mread_alignments.extend( [ x for x in list(this_mread_dict_set[read_x_qname]) ])
 		else:
 			this_mread_dict[read_x_qname] = list(this_mread_dict_set[read_x_qname])[0]
-	
+
 	return genomic_cluster, this_mread_dict, discarded_mread_alignments
 
 
@@ -275,8 +276,13 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			## record those discarded alignments/reads
 			## note: we mark discarded_mread as processed as well,
 			## so as not to create a bias to less clustered regions.
-			_ = map(processed_mread_alignments.add, discarded_mread_list)
-			_ = map(processed_mreads.add, [x.qname for x in discarded_mread_list])
+			# THIS IS PYTHON3 INCOMPATIBLE
+			#_ = map(processed_mread_alignments.add, discarded_mread_list)
+			#_ = map(processed_mreads.add, [x.qname for x in discarded_mread_list])
+			for x in discarded_mread_list:
+				processed_mread_alignments.add(x)
+			for x in discarded_mread_list:
+				processed_mreads.add(x.qname)
 			if genomic_cluster is None:  # this cluster is invald (only double-mappers)
 				continue
 			
@@ -291,7 +297,10 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			
 			## then add new alignments(edges) to generate connected nodes
 			## in the next iteration
-			_ = map(processed_mread_alignments.add, this_mread_dict.values())
+			# THIS IS PYTHON3 INCOMPATIBLE
+			#_ = map(processed_mread_alignments.add, this_mread_dict.values())
+			for x in list(this_mread_dict.values()):
+				processed_mread_alignments.add(x)
 			for read_x_qname in this_mread_dict:
 				if read_x_qname in processed_mreads:
 					continue
@@ -300,7 +309,9 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			
 			## .. and record to processed reads since we have generated
 			## the nodes for them
-			_ = map(processed_mreads.add, this_mread_dict.keys())
+			#_ = map(processed_mreads.add, this_mread_dict.keys())  # this is python3 incompatible
+			for x in list(this_mread_dict.keys()):
+				processed_mreads.add(x)
 		
 		# if no more connected nodes can be found, break loop 
 		if len(next_read_aln_list)==0:
@@ -451,7 +462,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 				genomic_cluster_dict, winsize=winsize, unstranded=unstranded)
 		subgraph = set()
 		for read in read_to_locations:
-			_ = map(subgraph.add, read_to_locations[read].keys())
+			_ = deque(map(subgraph.add, read_to_locations[read].keys()))
 		subgraph = list(subgraph)
 		#if len(subgraph)==1 and len(read_to_locations)>10:
 		#	raise Exception('Incorrect mread assigned to one location')
@@ -516,7 +527,7 @@ def parser(args):
 			winsize=winsize, unstranded=unstranded, retag=retag, strandness=strandness)
 		
 		logger.info('end')
-	except KeyboardInterrupt():
+	except KeyboardInterrupt:
 		sys.exit(0)
 	return
 	
