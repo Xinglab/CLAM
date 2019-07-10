@@ -185,13 +185,13 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	alpha_ip_vec = np.empty(intv_bin_ip.shape[0])
 	alpha_con_vec = np.empty(intv_bin_con.shape[0])
 	if norm_lib and tot_count_dict is not None:
-		try:
+		if 'mbam.ip' in tot_count_dict:
 			ip_sum = np.array(tot_count_dict['ubam.ip']) + np.array(tot_count_dict['mbam.ip'] )
-		except KeyError:
+		else:
 			ip_sum = np.array(tot_count_dict['ubam.ip'])
-		try:
+		if 'mbam.con' in tot_count_dict:
 			con_sum = np.array(tot_count_dict['ubam.con']) + np.array(tot_count_dict['mbam.con'])
-		except KeyError:
+		else:
 			con_sum = np.array(tot_count_dict['ubam.con'])
 	else:
 		ip_sum = np.apply_along_axis(np.sum, 1, intv_bin_ip)
@@ -375,7 +375,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	## "narrowPeak" format from 
 	## https://genome.ucsc.edu/FAQ/FAQformat.html#format12
 	## chr start end name 1000 strand signalValue pVal qVal peak
-	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t%.3e\t%.3e\t.\n"
+	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%.3f\t%.3e\t%.3e\t.\n"
 	BED = ''
 	if len(fold_change)==1:
 		lb = np.log(fold_change[0]) if with_control else fold_change[0]
