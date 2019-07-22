@@ -25,9 +25,8 @@ Author:
 Tested under python 2.7.3
 """
 
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.3'
-__email__ = 'zj.z@ucla.edu'
+from . import config
+__version__ = config.__version__
 
 import os
 import sys
@@ -128,7 +127,8 @@ def	bin_interval_counts(interval, binsize=50):
 	return bins
 
 
-def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_method='fdr_bh'):
+def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_method='fdr_bh', 
+	norm_lib=False, tot_count_dict=None):
 	"""DOCSTRING
 	Args
 	Returns
@@ -184,20 +184,33 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	binsignal = np.empty(intv_counter, dtype='S50')
 	alpha_ip_vec = np.empty(intv_bin_ip.shape[0])
 	alpha_con_vec = np.empty(intv_bin_con.shape[0])
-	ip_sum = np.apply_along_axis(np.sum, 1, intv_bin_ip)
-	con_sum = np.apply_along_axis(np.sum, 1, intv_bin_con)
-	if any(ip_sum==0) or any(con_sum==0):
-		return None, None, None
+	if norm_lib and tot_count_dict is not None:
+		if 'mbam.ip' in tot_count_dict:
+			ip_sum = np.array(tot_count_dict['ubam.ip']) + np.array(tot_count_dict['mbam.ip'] )
+		else:
+			ip_sum = np.array(tot_count_dict['ubam.ip'])
+		if 'mbam.con' in tot_count_dict:
+			con_sum = np.array(tot_count_dict['ubam.con']) + np.array(tot_count_dict['mbam.con'])
+		else:
+			con_sum = np.array(tot_count_dict['ubam.con'])
+	else:
+		ip_sum = np.apply_along_axis(np.sum, 1, intv_bin_ip)
+		con_sum = np.apply_along_axis(np.sum, 1, intv_bin_con)
+	
+	## TODO: this avoids the error "DivisionByZero" when any of the IP/con is zero..
+	## comment out because add pseudo-count.. ZZJ 2019.5.31
+	#if any(ip_sum==0) or any(con_sum==0):
+	#	return None, None, None
 	
 	# compute the dispersion parameters
 	min_alpha = 0.001 ## small alpha reduces to Poisson
 	max_alpha = 0.01   ## large alpha costs loss of power
 	if with_control:
 		for i in range(intv_bin_con.shape[0]):
-			height = ztnb_em.collapse_data(np.floor(intv_bin_con[i,]))
-			height[0] = 0
 			try:
 				ll, mu, alpha = ztnb_em.EM_estim_params(height, max_iter=10, verbose=False)
+				height = ztnb_em.collapse_data(np.floor(intv_bin_con[i,]))
+				height[0] = 0
 			except:   ## means truncated loglik=0, not enough data
 				alpha = max_alpha
 			alpha = max_alpha if alpha>max_alpha else alpha
@@ -212,7 +225,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 	for i in range(intv_bin_ip.shape[0]):
 		height = ztnb_em.collapse_data(np.floor(intv_bin_ip[i,]))
 		height[0] = 0
-		if np.sum(height.values())>0:
+		if np.sum([x for x in height.values()])>0:
 			try:
 				ll, mu, alpha = ztnb_em.EM_estim_params(height, max_iter=10, verbose=False)
 			except:
@@ -239,7 +252,7 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 		this_ip = intv_bin_ip[:, i]
 		others_ip = ip_sum - this_ip
 		this_con = intv_bin_con[:, i]
-		others_con = con_sum - this_con
+		others_con = con_sum - intv_bin_con[:, i]
 		if np.sum(this_ip) == 0:
 			binsignal[i], binscore[i] = 'nan', np.nan
 			continue
@@ -280,13 +293,15 @@ def test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=True, correction_m
 			binsignal[i] = ','.join([str(int(x)) if x==int(x) else str(x) for x in this_ip])
 	
 	# correcting for multiple-testing
+	if np.sum(np.isnan(binscore))==len(binscore):
+		return None, None, None
 	adj = multipletests(binscore[~ np.isnan(binscore)], alpha=0.05, method=correction_method)
 	binscore_adj = np.copy(binscore)
 	binscore_adj[ ~ np.isnan(binscore) ] = adj[1]
 	return binsignal, binscore_adj, binscore
 
 
-def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.], min_clip_cov=0, pooling=False):
+def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsize=50, unstranded=False, qval_cutoff=0.05, fold_change=[2.], min_clip_cov=0, pooling=False, norm_lib=False, tot_count_dict=None):
 	"""DOCSTRING
 	Args
 	Returns
@@ -309,7 +324,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	ip_sum = np.apply_along_axis(np.sum, 1, interval_ip)
 	valid_ip_sample = np.where(ip_sum > min_clip_cov)[0]
 	if len(valid_ip_sample)==0:
-		#print "no reads"
+		#print("no reads")
 		return ''
 	interval_ip = interval_ip[valid_ip_sample,:]
 		
@@ -343,7 +358,9 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	intv_bin_con = bin_interval_counts(interval_con, binsize=binsize)
 	
 	# perform statistical test
-	signal_val, binscore_adj, binscore = test_bin_negbinom(intv_bin_ip, intv_bin_con, with_control=with_control)
+	signal_val, binscore_adj, binscore = test_bin_negbinom(
+		intv_bin_ip, intv_bin_con, with_control=with_control,
+		norm_lib=norm_lib, tot_count_dict=tot_count_dict)
 	
 	# DO NOT USE
 	#if with_control or intv_bin_ip.shape[0]>1:
@@ -358,7 +375,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	## "narrowPeak" format from 
 	## https://genome.ucsc.edu/FAQ/FAQformat.html#format12
 	## chr start end name 1000 strand signalValue pVal qVal peak
-	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t%.3e\t%.3e\t.\n"
+	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%.3f\t%.3e\t%.3e\t.\n"
 	BED = ''
 	if len(fold_change)==1:
 		lb = np.log(fold_change[0]) if with_control else fold_change[0]
@@ -384,11 +401,13 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	return BED
 	
 
-def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling) ):
+#def _child_peak_caller(ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov ):
+def _child_peak_caller(args):
 	"""DOCSTRING
 	Args
 	Returns
 	"""
+	ip_bam_list, con_bam_list, child_gene_list, gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling, norm_lib, tot_count_dict = args
 	# open file handler for child process
 	bam_dict = make_bam_handler_dict(ip_bam_list, con_bam_list)
 	
@@ -404,10 +423,64 @@ def _child_peak_caller( (ip_bam_list, con_bam_list, child_gene_list, gene_annot,
 		BED += call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
 				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change,
-				min_clip_cov=min_clip_cov, pooling=pooling)
+				min_clip_cov=min_clip_cov, pooling=pooling,
+				norm_lib=norm_lib, tot_count_dict=tot_count_dict)
 	# close the handler
 	_ = map(lambda x: x.close(), [bam for x in bam_dict.values() for bam in x])
 	return BED
+
+
+def get_bam_total_reads(ip_bam_list, con_bam_list):
+	tot_count_dict = defaultdict(list)
+	try:
+		ubam_ip, mbam_ip = ip_bam_list
+	except:
+		ubam_ip = ip_bam_list[0]
+		mbam_ip = None
+
+	for bam_fn in ubam_ip.split(','):
+		if not os.path.isfile(bam_fn):
+			raise Exception('%s not found'%bam_fn)
+		tot_count_dict['ubam.ip'].append( get_total_reads(bam_fn) )
+
+	if mbam_ip is not None:
+		for bam_fn in mbam_ip.split(','):
+			if not os.path.isfile(bam_fn):
+				raise Exception('%s not found'%bam_fn)
+		tot_count_dict['mbam.ip'].append( get_total_reads(bam_fn) )
+		
+	if con_bam_list is None:
+		return tot_count_dict
+
+	try:
+		ubam_con, mbam_con = con_bam_list
+	except:
+		ubam_con = con_bam_list[0]
+		mbam_con = None
+
+	for bam_fn in ubam_con.split(','):
+		if not os.path.isfile(bam_fn):
+			raise Exception('%s not found'%bam_fn)
+		tot_count_dict['ubam.con'].append( get_total_reads(bam_fn) )
+
+	if mbam_con is not None:
+		for bam_fn in mbam_con.split(','):
+			if not os.path.isfile(bam_fn):
+				raise Exception('%s not found'%bam_fn)
+		tot_count_dict['mbam.con'].append( get_total_reads(bam_fn) )
+
+	return tot_count_dict
+
+
+def get_total_reads(bam_filename):
+	idxstats  = pysam.idxstats(bam_filename).split('\n')
+	tot = 0
+	for l in idxstats:
+		if not l:
+			continue
+		ele = l.split('\t')
+		tot += int(ele[-2])
+	return tot
 
 
 def make_bam_handler_dict(ip_bam_list, con_bam_list):
@@ -452,6 +525,7 @@ def make_bam_handler_dict(ip_bam_list, con_bam_list):
 
 def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8, 
 		out_dir='.', binsize=50,
+		norm_lib=False,
 		unique_only=False, unstranded=True,
 		qval_cutoff=0.05, fold_change=[2.], 
 		min_clip_cov=0, pooling=False):
@@ -486,6 +560,9 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 	
 	# read in GTF
 	gene_annot = read_gtf(gtf_fp)
+
+	# read total library read number
+	tot_count_dict = get_bam_total_reads(ip_bam_list, con_bam_list)
 	
 	if nthread == 1:
 	# iteratively call peaks in each gene
@@ -495,7 +572,8 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 			BED = call_gene_peak(bam_dict, gene, 
 				unique_only=unique_only, with_control=with_control, 
 				unstranded=unstranded, binsize=binsize, qval_cutoff=qval_cutoff, fold_change=fold_change,
-				min_clip_cov=min_clip_cov, pooling=pooling)
+				min_clip_cov=min_clip_cov, pooling=pooling,
+				norm_lib=norm_lib, tot_count_dict=tot_count_dict)
 			ofile.write(BED)
 			#print BED
 			peak_counter += len(BED.split('\n'))-1
@@ -506,12 +584,12 @@ def peakcaller(ip_bam_list, gtf_fp, con_bam_list=None, nthread=8,
 	else:
 	# multi-threading on subset of genes
 		logger.info('multi-threading')
-		gene_list = gene_annot.keys()
+		gene_list = list(gene_annot.keys())
 		child_gene_list = [x for x in chunkify(gene_list, nthread)]
 		pool=Pool(processes=nthread)
 		BED_list = pool.map(
 			_child_peak_caller, 
-			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling) for i in range(nthread)]
+			[(ip_bam_list, con_bam_list, child_gene_list[i], gene_annot, unique_only, with_control, unstranded, binsize, qval_cutoff, fold_change, min_clip_cov, pooling, norm_lib, tot_count_dict) for i in range(nthread)]
 			)
 		pool.terminate()
 		pool.join()
@@ -530,7 +608,7 @@ def chunkify(a, n):
 		the chunkified index
 	"""
 	k, m = len(a) / n, len(a) % n
-	return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
+	return (a[ int(i * k + min(i, m)) :int((i + 1) * k + min(i + 1, m))] for i in range(n))
 
 
 def parser(args):
@@ -551,6 +629,7 @@ def parser(args):
 		binsize = args.binsize
 		qval_cutoff = args.qval_cutoff
 		fold_change = args.fold_change
+		norm_lib = args.norm_lib
 		min_clip_cov = args.min_clip_cov
 		pooling = args.pooling
 		logger = logging.getLogger('CLAM.Peakcaller')
@@ -559,6 +638,7 @@ def parser(args):
 		
 		peakcaller(ip_bam_list, gtf_fp, con_bam_list, nthread, 
 			out_dir=out_dir, binsize=binsize,
+			norm_lib=norm_lib,
 			unique_only=unique_only, unstranded=unstranded,
 			qval_cutoff=qval_cutoff,
 			fold_change=fold_change,
@@ -566,7 +646,7 @@ def parser(args):
 			pooling=pooling)
 		
 		logger.info('end')
-	except KeyboardInterrupt():
+	except KeyboardInterrupt:
 		sys.exit(0)
 	return
 
