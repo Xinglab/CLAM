@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import peak_annotator
 
 
 def parser(args):
@@ -45,7 +44,7 @@ def download_genome(genome):
         cmd.append('rm  {genome}.zip'.format(genome=genome))
         for item in cmd:
             subprocess.call(item, shell=True, executable='/bin/bash')
-        print 'Download finished'    
+        print('Download finished')    
     os.chdir(curr_dir)
 
 def check_genome_data(genome):

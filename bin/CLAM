@@ -65,17 +65,17 @@ def main():
 		#print args
 		peakcaller.parser( args )
 
-  elif subcommand == 'permutation_callpeak':
+	elif subcommand == 'permutation_callpeak':
 		from CLAM import permutation_peakcaller
 		permutation_peakcaller.parser( args )
-  
-  elif subcommand == 'peak_annotator':
-        from CLAM import peak_annotator
-        peak_annotator.parser(args)
-  
-  elif subcommand == 'data_downloader':
-        from CLAM import download_data
-        download_data.parser(args)
+
+	elif subcommand == 'peak_annotator':
+		from CLAM import peak_annotator
+		peak_annotator.parser(args)
+
+	elif subcommand == 'data_downloader':
+		from CLAM import download_data
+		download_data.parser(args)
 
 
 def setup_logger():
@@ -131,12 +131,12 @@ def get_arg_parser():
 	# permutation_callpeak
 	add_permutation_callpeak_parser(subparsers)
   
-  # peak_annotator
-  add_peak_annotator_parser(subparsers)
+	# peak_annotator
+	add_peak_annotator_parser(subparsers)
 
-  # data_downloader
-  add_data_downloader_parser(subparsers)
-	
+	# data_downloader
+	add_data_downloader_parser(subparsers)
+
 	return argparser
 
 
@@ -293,31 +293,31 @@ def add_permutation_callpeak_parser( subparsers ):
 
 
 def add_peak_annotator_parser(subparsers):
-    ag_anno = subparsers.add_parser(
-        "peak_annotator", help="CLAM peak annotator: assign peaks to genomic regions")
+	ag_anno = subparsers.add_parser(
+		"peak_annotator", help="CLAM peak annotator: assign peaks to genomic regions")
 
-    # input/output
-    ag_anno.add_argument("-i", "--input", dest="peak_in", type=str, required=True,
-                         help="Input peak file")
+	# input/output
+	ag_anno.add_argument("-i", "--input", dest="peak_in", type=str, required=True,
+						help="Input peak file")
 
-    ag_anno.add_argument("-g", "--genome", dest="genome", choices=('hg19', 'hg38', 'mm10'), type=str, required=True,
-                         help="Genome version (hg19, hg38, mm10 avaiable)")
+	ag_anno.add_argument("-g", "--genome", dest="genome", choices=('hg19', 'hg38', 'mm10'), type=str, required=True,
+						help="Genome version (hg19, hg38, mm10 avaiable)")
 
-    ag_anno.add_argument("-o", "--out-file", dest="out_file", type=str, required=True,
-                         help="Output file")
+	ag_anno.add_argument("-o", "--out-file", dest="out_file", type=str, required=True,
+						help="Output file")
 
-    return
+	return
 
 
 def add_data_downloader_parser(subparsers):
-    ag_down = subparsers.add_parser(
-        "data_downloader", help="CLAM data downloader: download data of genomic regions")
+	ag_down = subparsers.add_parser(
+		"data_downloader", help="CLAM data downloader: download data of genomic regions")
 
-    # input/output
-    ag_down.add_argument("-g", "--genome", dest="genome", choices=('hg19', 'hg38', 'mm10'), type=str, required=True,
-                         help="Genome version (hg19, hg38, mm10 avaiable)")
+	# input/output
+	ag_down.add_argument("-g", "--genome", dest="genome", choices=('hg19', 'hg38', 'mm10'), type=str, required=True,
+		help="Genome version (hg19, hg38, mm10 avaiable)")
 
-    return
+	return
 
 
 

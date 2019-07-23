@@ -375,7 +375,7 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 	## "narrowPeak" format from 
 	## https://genome.ucsc.edu/FAQ/FAQformat.html#format12
 	## chr start end name 1000 strand signalValue pVal qVal peak
-	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%.3f\t%.3e\t%.3e\t.\n"
+	narrowPeak_formatter = "%s\t%i\t%i\t%s\t1000\t%s\t%s\t%.3e\t%.3e\t.\n"
 	BED = ''
 	if len(fold_change)==1:
 		lb = np.log(fold_change[0]) if with_control else fold_change[0]
@@ -397,6 +397,8 @@ def call_gene_peak(bam_dict, gene, unique_only=False, with_control=False, binsiz
 			strand = gene[3]
 			peak_num += 1
 			peak_name = gene[4] + '-%i'%peak_num
+			if with_control:
+				signal = "%.3f"%(float(signal))
 			BED += narrowPeak_formatter % (chr, binstart, binend, peak_name, strand, signal, pval, qval)
 	return BED
 	

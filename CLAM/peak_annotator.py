@@ -3,7 +3,7 @@ import os
 import pybedtools
 import argparse as ap
 import logging
-import download_data
+from . import download_data, config
 
 '''
 Assign peaks to genomic regions
@@ -30,8 +30,8 @@ def parser(args):
         genome = args.genome
         out_file = args.out_file
         if 'CLAM_DAT' not in os.environ or not download_data.check_genome_data(genome):
-            print "Unable to locate CLAM data folder for genomic regions, will try to download."
-            print "Downloading..."
+            print("Unable to locate CLAM data folder for genomic regions, will try to download.")
+            print("Downloading...")
             download_data.download_genome(genome)
         genome_data = os.environ['CLAM_DAT']
         intersect_gtf_regions(
@@ -51,10 +51,10 @@ def intersect_gtf_regions(peak_fp, outfn, gtf_dir):
     # input arguments
 
     # make pybedtools objects
-    print "Loading peaks..."
+    print("Loading peaks...")
     peaks = pybedtools.BedTool(peak_fp)
-    print "Peak file loaded."
-    print "Loading genome annotation..."
+    print("Peak file loaded.")
+    print("Loading genome annotation...")
     ref_dict = {
         'exon': pybedtools.BedTool(os.path.join(gtf_dir, 'exons.bed')),
         '3UTR': pybedtools.BedTool(os.path.join(gtf_dir, '3UTRs.bed')),
@@ -64,7 +64,7 @@ def intersect_gtf_regions(peak_fp, outfn, gtf_dir):
         'proximal200': pybedtools.BedTool(os.path.join(gtf_dir, 'proximal200_intron.bed')),
         'proximal500': pybedtools.BedTool(os.path.join(gtf_dir, 'proximal500_intron.bed'))
     }
-    print "Genome annotation loaded."
+    print("Genome annotation loaded.")
 
     # # process reference for use
     target = {
@@ -80,7 +80,7 @@ def intersect_gtf_regions(peak_fp, outfn, gtf_dir):
                      'other_exon', "px200_intron", "px500_intron", "distal_intron"]
     init = True
 
-    print "Intersecting peaks with genome annotation..."
+    print("Intersecting peaks with genome annotation...")
     for cat in category_list:
         bed_arr = []
         for interval in target[cat]:
@@ -99,10 +99,10 @@ def intersect_gtf_regions(peak_fp, outfn, gtf_dir):
                 target[cat], wa=True, wb=True), postmerge=False)
     result_bed = result_bed.sort()
 
-    print "Preparing output..."
+    print("Preparing output...")
     result_bed.saveas(outfn + '_')
     prepend = ['## Annotation peaks to genomic regions, all intersected genomic regions are presented.',
-               '## CLAM version: 1.2.0',
+               '## CLAM version: %s'%config.__version__,
                '## Column 1:  Peak chromosome',
                '## Column 2:  Peak start',
                '## Column 3:  Peak end',
@@ -129,7 +129,7 @@ def intersect_gtf_regions(peak_fp, outfn, gtf_dir):
     os.system('cat {outtmp} >> {outfn}'.format(
         outtmp=outfn + '_', outfn=outfn))
     os.remove(outfn+'_')
-    print "DONE"
+    print("DONE")
 
 
 if __name__ == '__main__':
@@ -137,8 +137,8 @@ if __name__ == '__main__':
     os.chdir('/mnt/h/yi_lab/m6a/src/scripts/peakComposition')
     peak_in, genome, out_file = 'narrow_peak.unique.bed', 'mm10', 'annotate_peak.bed'
     if 'CLAM_DAT' not in os.environ or not download_data.check_genome_data(genome):
-        print "Unable to find CLAM data folder for genomic regions, please try to download it using download_genome command."
-        print "Downloading..."
+        print("Unable to find CLAM data folder for genomic regions, please try to download it using download_genome command.")
+        print("Downloading...")
         download_data.download_genome(genome)
     genome_data = os.environ['CLAM_DAT']
     intersect_gtf_regions(
