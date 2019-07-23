@@ -1,17 +1,26 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-
+from CLAM.config import __version__
 
 def main():
 	setup(name='CLAM',
-		  version='1.1.3',
-		  description='CLIP-seq Analysis of Multi-mapped reads',
-		  author='Zijun Zhang',
-		  author_email='zj.z@ucla.edu',
-		  url='https://github.com/Xinglab/CLAM',
-		  packages=['CLAM', 'CLAM.stats'],
-		  scripts=['bin/CLAM']
+		version=__version__,
+		description='CLIP-seq Analysis of Multi-mapped reads',
+		author='Zijun Zhang',
+		author_email='zj.z@ucla.edu',
+		url='https://github.com/Xinglab/CLAM',
+		packages=['CLAM', 'CLAM.stats'],
+		scripts=['bin/CLAM'],
+		install_requires=[
+			'scipy',
+			'pysam',
+			'numpy',
+			'multiprocessing',
+			'statsmodels',
+			'tqdm',
+			'pybedtools'
+			'mpmath']
 		 )
 	return
 

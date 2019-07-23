@@ -18,16 +18,15 @@ Author:
 Tested under python 2.7
 """
 
-__author__ = 'Zijun Zhang'
-__version__ = '1.1.3'
-__email__ = 'zj.z@ucla.edu'
+from . import config
+__version__ = config.__version__
 
 import os
 import sys
 import pysam
 import numpy as np
-from collections import defaultdict
-from tqdm import tqdm
+from collections import defaultdict, deque
+#from tqdm import tqdm
 import logging
 import datetime
 import bisect
@@ -206,7 +205,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	chr_strand = chrom+':'+strand
 	idx = bisect.bisect_right(genomic_cluster_dict[chr_strand], site)
 	if not idx%2:
-		print alignment
+		print(alignment)
 		raise Exception('%s falls out of region %s'%(alignment.qname, chr_strand+':'+str(site)) )
 	start = genomic_cluster_dict[chr_strand][idx-1] - winsize
 	start = 1 if start<1 else start
@@ -217,11 +216,12 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 	## fetch the reads
 	cluster_name = ':'.join([chrom, strand, str(genomic_cluster_dict[chr_strand][idx-1]), str(genomic_cluster_dict[chr_strand][idx])])
 	if not cluster_name in location_to_reads:
-		raise Exception("cannot find cluster %s in `location_to_reads`"%cluster_name)
+		raise Exception("cannot find cluster '%s' associated with read '%s' in `location_to_reads` of len %i"%(cluster_name, alignment.qname, len(location_to_reads)))
 	mread_list = location_to_reads[cluster_name]
-	del location_to_reads[cluster_name]
+	#print(alignment, cluster_name)
 	for x in mread_list:
 		this_mread_dict_set[x.qname].add(x)
+	del location_to_reads[cluster_name]
 	
 	## find other mreads in this cluster
 	for read_x_qname in this_mread_dict_set:
@@ -229,7 +229,7 @@ def build_read_cluster(alignment, chr_dict, location_to_reads, genomic_cluster_d
 			discarded_mread_alignments.extend( [ x for x in list(this_mread_dict_set[read_x_qname]) ])
 		else:
 			this_mread_dict[read_x_qname] = list(this_mread_dict_set[read_x_qname])[0]
-	
+
 	return genomic_cluster, this_mread_dict, discarded_mread_alignments
 
 
@@ -276,8 +276,13 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			## record those discarded alignments/reads
 			## note: we mark discarded_mread as processed as well,
 			## so as not to create a bias to less clustered regions.
-			_ = map(processed_mread_alignments.add, discarded_mread_list)
-			_ = map(processed_mreads.add, [x.qname for x in discarded_mread_list])
+			# THIS IS PYTHON3 INCOMPATIBLE
+			#_ = map(processed_mread_alignments.add, discarded_mread_list)
+			#_ = map(processed_mreads.add, [x.qname for x in discarded_mread_list])
+			for x in discarded_mread_list:
+				processed_mread_alignments.add(x)
+			for x in discarded_mread_list:
+				processed_mreads.add(x.qname)
 			if genomic_cluster is None:  # this cluster is invald (only double-mappers)
 				continue
 			
@@ -292,7 +297,10 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			
 			## then add new alignments(edges) to generate connected nodes
 			## in the next iteration
-			_ = map(processed_mread_alignments.add, this_mread_dict.values())
+			# THIS IS PYTHON3 INCOMPATIBLE
+			#_ = map(processed_mread_alignments.add, this_mread_dict.values())
+			for x in list(this_mread_dict.values()):
+				processed_mread_alignments.add(x)
 			for read_x_qname in this_mread_dict:
 				if read_x_qname in processed_mreads:
 					continue
@@ -301,7 +309,9 @@ def construct_subgraph(location_to_reads, read_qname, mread_dict, processed_mrea
 			
 			## .. and record to processed reads since we have generated
 			## the nodes for them
-			_ = map(processed_mreads.add, this_mread_dict.keys())
+			#_ = map(processed_mreads.add, this_mread_dict.keys())  # this is python3 incompatible
+			for x in list(this_mread_dict.keys()):
+				processed_mreads.add(x)
 		
 		# if no more connected nodes can be found, break loop 
 		if len(next_read_aln_list)==0:
@@ -382,8 +392,9 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 
 
 def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='median', 
-		winsize=50, unstranded=False, retag=False):
+		winsize=50, unstranded=False, retag=False, strandness="same"):
 	"""The main entry for CLAM-realigner.
+
 	Args:
 		in_bam (str): filepath for input bam
 		out_dir (str): filepath for CLAM output folder
@@ -394,6 +405,9 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		winsize (int): window size 
 		unstranded (bool): ignore alignment strand info if turned on
 		retag (bool): force to call `preprocessor` to process `in_bam` if turned on
+		strandness (str): specifies if the expected read alignment strand is `same` with 
+			transcript strand, or `opposite`, or `none` i.e. unstranded
+	
 	Returns:
 		None
 	"""
@@ -410,7 +424,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
 		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
-			omit_detail=False)
+			strandness=strandness)
 	else:
 		logger.info("found existing bams; skipped tagging.")
 
@@ -448,7 +462,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 				genomic_cluster_dict, winsize=winsize, unstranded=unstranded)
 		subgraph = set()
 		for read in read_to_locations:
-			_ = map(subgraph.add, read_to_locations[read].keys())
+			_ = deque(map(subgraph.add, read_to_locations[read].keys()))
 		subgraph = list(subgraph)
 		#if len(subgraph)==1 and len(read_to_locations)>10:
 		#	raise Exception('Incorrect mread assigned to one location')
@@ -503,17 +517,17 @@ def parser(args):
 		max_tags = args.max_tags
 		retag = args.retag
 		winsize = args.winsize
-		unstranded = args.unstranded
+		strandness = args.strandness
+		unstranded = strandness == "none"
 		
-		#logger = logging.getLogger('CLAM.Realigner')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		realigner(in_bam, out_dir, max_hits=max_hits, max_tags=max_tags, read_tagger_method=tag_method, 
-			winsize=winsize, unstranded=unstranded, retag=retag)
+			winsize=winsize, unstranded=unstranded, retag=retag, strandness=strandness)
 		
 		logger.info('end')
-	except KeyboardInterrupt():
+	except KeyboardInterrupt:
 		sys.exit(0)
 	return
 	

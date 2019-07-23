@@ -89,7 +89,7 @@ def EM_estim_params(height, tol = 10**-4, max_iter = 1000, verbose = False, mu =
 			raise ZeroDivisionError('invalid loglik function value')
 		error = abs((score - prev_score)/score)
 		if verbose:
-			print 'Iter ' + str(i) + ': eps = ' + str(error) + '; mu = ' + str(mu) + '; alpha = ' + str(alpha)
+			print('Iter ' + str(i) + ': eps = ' + str(error) + '; mu = ' + str(mu) + '; alpha = ' + str(alpha))
 		if(error < tol):
 			break
 		prev_score = score
