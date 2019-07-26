@@ -16,7 +16,6 @@ def main():
 			'scipy',
 			'pysam',
 			'numpy',
-			'multiprocessing',
 			'statsmodels',
 			'tqdm',
 			'pybedtools',
