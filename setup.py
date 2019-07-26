@@ -19,7 +19,7 @@ def main():
 			'multiprocessing',
 			'statsmodels',
 			'tqdm',
-			'pybedtools'
+			'pybedtools',
 			'mpmath']
 		 )
 	return
