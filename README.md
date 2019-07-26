@@ -1,4 +1,4 @@
-# CLAM Version 1.1.3
+# CLAM Version 1.2.0
 # CLIP-seq Analysis of Multi-mapped reads
 
 ## Table of Contents
@@ -22,7 +22,7 @@ For details, please read our [NAR paper](https://academic.oup.com/nar/article/45
 [TOC](#clip-seq-analysis-of-multi-mapped-reads)
 
 ## Installation
-CLAM v1.1 works under Python 2. Please click and download the latest version from the releases. Once unzip the file, type
+CLAM v1.2 works under Python 2/3. Please click and download the latest version from the releases. Once unzip the file, type
 ```
 $ python setup.py install
 ```
@@ -79,7 +79,7 @@ For command line options of each sub-command, type: CLAM COMMAND -h
 Below we briefly describe what each subcomand does and provide an example command-line run.
 
 #### CLAM preprocessor
-This subcommand (new v1.1) will prepare the input files for CLAM pipeline. As of the current version (v1.1), it looks for 
+This subcommand (new since v1.1) will prepare the input files for CLAM pipeline. It looks for 
 reads passing QC, splits the input bam file by sorting them into `unique.sorted.bam` and `multi.sorted.bam`, 
 and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
 
@@ -106,7 +106,7 @@ CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-t
 ```
 
 #### CLAM peakcaller
-This subcommand (new in v1.1) will call peaks by looking for bins enriched with IP reads over control, specifying a 
+This subcommand (new since v1.1) will call peaks by looking for bins enriched with IP reads over control, specifying a 
 Negative-binomial model on observed read counts.
 
 Note we can specify both `unique.sorted.bam` (from `preprocessor`) and `realigned.sorted.bam` (from `realigner`) and 
