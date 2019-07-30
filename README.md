@@ -7,22 +7,23 @@
 2. [Installation](#section2)
 3. [Input](#section3)
 4. [Usage](#section4)<br>
-    4.1 [preprocessor](#section4_1)<br>
-    4.2 [realigner](#section4_2)<br>
-    4.3 [peakcaller](#section4_3)<br>
-    4.4 [permutation_callpeak](#section4_4)<br>
-    4.5 [peak_annotator](#section4_5)<br>
+    4.1 [preprocessor](#section41)<br>
+    4.2 [realigner](#section42)<br>
+    4.3 [peakcaller](#section43)<br>
+    4.4 [permutation_callpeak](#section44)<br>
+    4.5 [peak_annotator](#section45)<br>
+    4.6 [data_downloader](#section46)<br>
 5. [Output](#section5)
 6. [An example](#section6)<br>
-    6.1 [Sample dataset](#section6_1)<br>
-    6.2 [Preprossing of sample dataset](#section6_2)<br>
-    6.3 [Read mapping](#section6_3)<br>
-    6.4 [PCR duplicate removal](#section6_4)<br>
-    6.5 [CLAM pre-processing](#section6_5)<br>
-    6.6 [Realigning](#section6_6)<br>
-    6.7 [Peak calling](#section6_7)<br>
-    6.8 [Annotation](#section6_8)<br>
-    6.9 [Detecting motif](#section6_9)
+    6.1 [Sample dataset](#section61)<br>
+    6.2 [Preprossing of sample dataset](#section62)<br>
+    6.3 [Read mapping](#section63)<br>
+    6.4 [PCR duplicate removal](#section64)<br>
+    6.5 [CLAM pre-processing](#section65)<br>
+    6.6 [Realigning](#section66)<br>
+    6.7 [Peak calling](#section67)<br>
+    6.8 [Annotation](#section68)<br>
+    6.9 [Detecting motif](#section69)
 
 <a id='section1'></a>
 ## Introduction
@@ -111,7 +112,7 @@ For command line options of each sub-command, type: CLAM COMMAND -h
 
 [TOC](#section0)
 
-<a id='section4_1'></a>
+<a id='section41'></a>
 ### CLAM preprocessor
 This subcommand (new since v1.1) will prepare the input files for CLAM pipeline. It looks for reads passing QC, splits the input bam file by sorting them into `unique.sorted.bam` and `multi.sorted.bam`, and adding an additional tag "RT" (short for Read Tag) to each alignment based which read tagger function the user supplied.
 
@@ -128,7 +129,7 @@ CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --rea
 
 [TOC](#section0)
 
-<a id='section4_2'></a>
+<a id='section42'></a>
 ### CLAM realigner
 This subcommand will run expectation-maxmization to assign the multi-mapped reads in a probablistic framework. 
 More details about the EM model is described in our NAR paper.
@@ -145,10 +146,8 @@ CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-t
 
 [TOC](#section0)
 
-<a id='section6_8'></a>
-### Annotate
 
-<a id='section4_3'></a>
+<a id='section43'></a>
 ### CLAM peakcaller
 This subcommand (new since v1.1) will call peaks by looking for bins enriched with IP reads over control, specifying a 
 Negative-binomial model on observed read counts.
@@ -174,7 +173,7 @@ path/to/IP/rep1/realigned.sorted.bam,path/to/IP/rep2/realigned.sorted.bam \
 
 [TOC](#section0)
 
-<a id='section4_4'></a>
+<a id='section44'></a>
 ### CLAM permutation_callpeak
 This subcommand will call peaks using permutation by randomly placing reads along the gene.
 More details about the permutation procedure is described in our NAR paper.
@@ -190,7 +189,7 @@ CLAM permutation_callpeak -i path/to/outdir/unique.sorted.bam path/to/outdir/rea
 
 [TOC](#section0)
 
-<a id='section4_5'></a>
+<a id='section45'></a>
 ### CLAM peak_annotator
 This sumcommand will annotate peaks to genomic regions. It requires genomic region files to exist. If not, `peak_annotator` will call `data_downloader` automatically. Currently, we support annotation of human(version hg19 and hg38) and mouse(version mm10)
 
@@ -203,7 +202,7 @@ CLAM peak_annotator path/to/peak/file/narrow_peak.unique.bed hg19 path/to/output
 
 [TOC](#section0)
 
-<a id='section4_5'></a>
+<a id='section46'></a>
 ### CLAM data_downloader
 This sumcommand will download prepared genomic annotation files to local system. Usually, it was called by `peak_annotator` automatically. You can also run it manually.
 
@@ -241,7 +240,7 @@ The output of peak-annotator is a BED file with extra columns output by BEDTools
 <a id='section6'></a>
 ## An example
 
-<a id='section6_1'></a>
+<a id='section61'></a>
 ### Sample dataset
 
 
@@ -364,7 +363,7 @@ A detaild list for each file:
 
 [TOC](#section0)
 
-<a id='section6_2'></a>
+<a id='section62'></a>
 ### Preprossing of sample dataset
 
 When all raw reads were downloaded, use catadaptor to remove adaptor sequences. Before this, let's unzip all files and rename them:
@@ -410,7 +409,7 @@ K562_RBFOX2_Inp_R1.adapterTrim.fastq K562_RBFOX2_Inp_R2.adapterTrim.fastq
 
 [TOC](#section0)
 
-<a id='section6_3'></a>
+<a id='section63'></a>
 ### Read mapping
 
 After reads were processed, we will need to map reads to genome. Here, we use STAR to map reads to human genome, version GRCh37.75. For a more comprehensive introduction to STAR, click [here](https://github.com/alexdobin/STAR).<br>
@@ -430,7 +429,7 @@ STAR --genomeDir /full/path/to/STAR/index/folder \
 
 [TOC](#section0)
 
-<a id='section6_4'></a>
+<a id='section64'></a>
 ### PCR duplicate removal
 
 As rRNAs and other repetitive RNA  may cause bias when performing peak calling, we will need to clean the mapped reads.<br> Use [BEDTOOLS](https://bedtools.readthedocs.io/en/latest/) to remove rRNAs (Optional. rRNA annotation can be exported from [UCSC Table Browser](http://genome.ucsc.edu/cgi-bin/hgTables)).
@@ -469,7 +468,7 @@ python2 collapse_duplicates.py -b star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA
 
 [TOC](#section0)
 
-<a id='section6_5'></a>
+<a id='section65'></a>
 ### CLAM preprocessing
 
 As one of the major feature of CLAM, multi-mapped reads were rescued by an EM procedure while peak calling (See our [paper](https://academic.oup.com/nar/article/45/16/9260/4077049) for more detail). Before peak calling, CLAM will seperate multi-mapped reads and uniquely mapped reads. This process can be omiited, if so, CLAM will still call the preprocessing module if it cannot find seperated BAM files.
@@ -491,8 +490,8 @@ CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.
 
 [TOC](#section0)
 
-<a id='section6_6'></a>
-### Realign
+<a id='section66'></a>
+### Realigning
 
 This step will realign multi-mapped reads to a unique genome location. CLAM realigner will also use uniquely mapped reads to determin exact position of multi-mapped reads, 
 
@@ -513,7 +512,7 @@ CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsiz
 
 [TOC](#section0)
 
-<a id='section6_7'></a>
+<a id='section67'></a>
 ### Peak calling
 
 This step will call peaks in multi-replicate mode of CLAM.
@@ -529,8 +528,8 @@ clam/K562_RBFOX2_rep1_IP/realigned.sorted.bam,clam/K562_RBFOX2_rep2_IP/realigned
 
 [TOC](#section0)
 
-<a id='section6_8'></a>
-### Annotate
+<a id='section68'></a>
+### Annotation
 
 Once peaks were called, the genome regions of peaks can be annotated by `peak_annotator`. If genomic region annotation file location is not in system environment or CLAM cannot find the files of the specific genome version in dedicated location, it will call data_downloder automatically.
 
@@ -566,7 +565,7 @@ The header of result file will looks like:
 
 [TOC](#section0)
 
-<a id='section6_9'></a>
+<a id='section69'></a>
 ### Detecting motif
 
 If you have [HOMER](http://homer.ucsd.edu/homer/motif/) installed, try to detect over-representing motifs using it.
