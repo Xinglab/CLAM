@@ -523,8 +523,7 @@ This step will call peaks in multi-replicate mode of CLAM.
 CLAM peakcaller -i clam/K562_RBFOX2_rep1_IP/unique.sorted.bam,clam/K562_RBFOX2_rep2_IP/unique.sorted.bam \
 clam/K562_RBFOX2_rep1_IP/realigned.sorted.bam,clam/K562_RBFOX2_rep2_IP/realigned.sorted.bam \
 -c clam/K562_RBFOX2_Inp/unique.sorted.bam clam/K562_RBFOX2_Inp/realigned.sorted.bam \
--o clam/peaks --unstranded --binsize 100top
-\
+-o clam/peaks --unstranded --binsize 100 \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
 
@@ -578,6 +577,6 @@ findMotifsGenome.pl clam/peaks/narrow_peak.combined.bed hg19 motif/ -rna -len 5,
 ```
 
 Ideally, you will get a list of motifs, including a 'GCAUG' motif.
-![image.png](attachment:image.png)
+<p><figure class="figure1" data-title="HOMER motif"><img alt="HOMER motif" src="docs/image.png" /><figcaption></figcaption></figure></p>
 
 [TOC](#section0)
