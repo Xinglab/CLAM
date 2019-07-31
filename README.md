@@ -244,21 +244,20 @@ The output of peak-annotator is a BED file with extra columns output by BEDTools
 ### Sample dataset
 
 
-```python
+
 A typical application of CLAM is to call peaks with CLIP-seq data. Here, we take an eCLIP seq dataset as an example. (A full Snakemake pipeline for analysing eCLIP data can be found [here](https://github.com/zj-zhang/CLAM_ENCODE_Snakemake).)
-```
 
 In this demo, we focused on RBFOX2 eCLIP data from K562 cell line provided by Van <em>et. al.</em> 
 
 
-```python
+```
 Van Nostrand, E. L., G. A. Pratt, A. A. Shishkin, C. Gelboin-Burkhart, M. Y. Fang, B. Sundararaman, S. M. Blue, T. B. Nguyen, C. Surka, K. Elkins, R. Stanton, F. Rigo, M. Guttman and G. W. Yeo (2016). "Robust transcriptome-wide discovery of RNA-binding protein binding sites with enhanced CLIP (eCLIP)." Nat Methods 13(6): 508-514.
 ```
 
 First, download raw data from ENCODE：
 
 
-```python
+```
 wget https://www.encodeproject.org/files/ENCFF495WQA/@@download/ENCFF495WQA.fastq.gz
 wget https://www.encodeproject.org/files/ENCFF492QZU/@@download/ENCFF492QZU.fastq.gz
 wget https://www.encodeproject.org/files/ENCFF930TLO/@@download/ENCFF930TLO.fastq.gz
@@ -369,7 +368,7 @@ A detaild list for each file:
 When all raw reads were downloaded, use catadaptor to remove adaptor sequences. Before this, let's unzip all files and rename them:
 
 
-```python
+```
 ll | grep fastq | awk '{print $9}' | xargs gzip -d
 mv ENCFF495WQA.fastq K562_RBFOX2_Inp_R1.fastq
 mv ENCFF492QZU.fastq K562_RBFOX2_Inp_R2.fastq
@@ -382,7 +381,7 @@ mv ENCFF942TPA.fastq K562_RBFOX2_rep2_IP_R2.fastq
 To remove adaptors, each paired-end reads should go through 2 rounds of processing. Take control as an example:
 
 
-```python
+```
 cutadapt -f fastq --match-read-wildcards --times 1 -e 0.1 -O 1 --quality-cutoff 6 -m 18 \
 -a NNNNNAGATCGGAAGAGCACACGTCTGAACTCCAGTCAC -g CTTCCGATCTACAAGTT -g CTTCCGATCTTGGTCCT \
 -A AACTTGTAGATCGGA -A AGGACCAAGATCGGA -A ACTTGTAGATCGGAA -A GGACCAAGATCGGAA \
@@ -395,7 +394,7 @@ K562_RBFOX2_Inp_R1.fastq K562_RBFOX2_Inp_R2.fastq
 ```
 
 
-```python
+```
 cutadapt -f fastq --match-read-wildcards --times 1 -e 0.1 -O 5 --quality-cutoff 6 -m 18 \
 -A AACTTGTAGATCGGA -A AGGACCAAGATCGGA \
 -A ACTTGTAGATCGGAA -A GGACCAAGATCGGAA -A CTTGTAGATCGGAAG -A GACCAAGATCGGAAG \
@@ -416,7 +415,7 @@ After reads were processed, we will need to map reads to genome. Here, we use ST
 Still, we take Control as an example:
 
 
-```python
+```
 STAR --genomeDir /full/path/to/STAR/index/folder \
 --readFilesIn K562_RBFOX2_Inp_R1.adapterTrim.round2.fastq K562_RBFOX2_Inp_R2.adapterTrim.round2.fastq 
 --outSAMtype BAM Unsorted \
@@ -435,34 +434,34 @@ STAR --genomeDir /full/path/to/STAR/index/folder \
 As rRNAs and other repetitive RNA  may cause bias when performing peak calling, we will need to clean the mapped reads.<br> Use [BEDTOOLS](https://bedtools.readthedocs.io/en/latest/) to remove rRNAs (Optional. rRNA annotation can be exported from [UCSC Table Browser](http://genome.ucsc.edu/cgi-bin/hgTables)).
 
 
-```python
+```
 bedtools intersect -f 0.90 -abam ../star/K562_RBFOX2_Inp/Aligned.out.bam -b /path/to/rRNA/annotation.bed -v > ../star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.bam
 ```
 
 
-```python
+```
 bedtools intersect -f 0.90 -abam ../star/K562_RBFOX2_rep1_IP/Aligned.out.bam -b /path/to/rRNA/annotation.bed -v > ../star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.bam
 ```
 
 
-```python
+```
 bedtools intersect -f 0.90 -abam ../star/K562_RBFOX2_rep2_IP/Aligned.out.bam -b /path/to/rRNA/annotation.bed -v > ../star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.bam
 ```
 
 In CLIP data analysis, its important to remove PCR duplicates. Here we used our in-house code to remove PCR duplicates (The code can be found [here](https://raw.githubusercontent.com/zj-zhang/CLAM_ENCODE_Snakemake/master/scripts/collapse_pcr/collapse_duplicates.py)). Them -m option indicates output log file of removed read number of each adaptor.
 
 
-```python
+```
 python2 collapse_duplicates.py -b star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.bam -o star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.dup_removed.bam -m star/K562_RBFOX2_Inp/dup_removal.metrics.txt
 ```
 
 
-```python
+```
 python2 collapse_duplicates.py -b star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.bam -o star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.dup_removed.bam -m star/K562_RBFOX2_rep1_IP/dup_removal.metrics.txt
 ```
 
 
-```python
+```
 python2 collapse_duplicates.py -b star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.bam -o star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.bam -m star/K562_RBFOX2_rep2_IP/dup_removal.metrics.txt
 ```
 
@@ -474,17 +473,17 @@ python2 collapse_duplicates.py -b star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA
 As one of the major feature of CLAM, multi-mapped reads were rescued by an EM procedure while peak calling (See our [paper](https://academic.oup.com/nar/article/45/16/9260/4077049) for more detail). Before peak calling, CLAM will seperate multi-mapped reads and uniquely mapped reads. This process can be omiited, if so, CLAM will still call the preprocessing module if it cannot find seperated BAM files.
 
 
-```python
+```
 CLAM preprocessor -i star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_Inp --read-tagger-method start
 ```
 
 
-```python
+```
 CLAM preprocessor -i star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep1_IP --read-tagger-method start
 ```
 
 
-```python
+```
 CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep2_IP --read-tagger-method start
 ```
 
@@ -496,17 +495,17 @@ CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.
 This step will realign multi-mapped reads to a unique genome location. CLAM realigner will also use uniquely mapped reads to determin exact position of multi-mapped reads, 
 
 
-```python
+```
 CLAM realigner -i clam/K562_RBFOX2_Inp/ -o clam/K562_RBFOX2_Inp --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
 
-```python
+```
 CLAM realigner -i clam/K562_RBFOX2_rep1_IP/ -o clam/K562_RBFOX2_rep1_IP --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
 
-```python
+```
 CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
@@ -518,7 +517,7 @@ CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsiz
 This step will call peaks in multi-replicate mode of CLAM.
 
 
-```python
+```
 CLAM peakcaller -i clam/K562_RBFOX2_rep1_IP/unique.sorted.bam,clam/K562_RBFOX2_rep2_IP/unique.sorted.bam \
 clam/K562_RBFOX2_rep1_IP/realigned.sorted.bam,clam/K562_RBFOX2_rep2_IP/realigned.sorted.bam \
 -c clam/K562_RBFOX2_Inp/unique.sorted.bam clam/K562_RBFOX2_Inp/realigned.sorted.bam \
@@ -534,14 +533,14 @@ clam/K562_RBFOX2_rep1_IP/realigned.sorted.bam,clam/K562_RBFOX2_rep2_IP/realigned
 Once peaks were called, the genome regions of peaks can be annotated by `peak_annotator`. If genomic region annotation file location is not in system environment or CLAM cannot find the files of the specific genome version in dedicated location, it will call data_downloder automatically.
 
 
-```python
+```
 CLAM peak_annotator -i clam/peaks/narrow_peak.combined.bed -g hg19 -o clam/peaks/annotate.txt
 ```
 
 The header of result file will looks like:
 
 
-```python
+```
 ## Annotation peaks to genomic regions all intersected genomic regions are presented.
 ## CLAM version: 1.2.0
 ## Column 1:  Peak chromosome
@@ -571,7 +570,7 @@ The header of result file will looks like:
 If you have [HOMER](http://homer.ucsd.edu/homer/motif/) installed, try to detect over-representing motifs using it.
 
 
-```python
+```
 findMotifsGenome.pl clam/peaks/narrow_peak.combined.bed hg19 motif/ -rna -len 5,6,7 -p 20 -size 100 -S 10
 ```
 
