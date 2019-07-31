@@ -42,7 +42,7 @@ Recently, we updated CLAM to version v1.2.0 with new features:
 CLAM v1.2 works under Python 2/3. Please click and download the latest version from the releases. Once unzip the file, type
 
 
-```python
+```
 python setup.py install
 ```
 
@@ -51,7 +51,7 @@ in your terminal and this will automatically install CLAM in your currently work
 You should have already installed "pysam" using pip/conda for your python interpreter. If not, you can check the detailed requirements in the file "requirements.txt", or type
 
 
-```python
+```
 pip install -r requirements.txt
 ```
 
@@ -60,7 +60,7 @@ to install those requirements manually.
 Or, a simpler way to install CLAM is through Pypi:
 
 
-```python
+```
 pip install --index-url https://test.pypi.org/simple/ --no-deps CLAM
 ```
 
@@ -82,7 +82,7 @@ CLAM is run through issueing subcommands. Currently there are four subcommands a
 
 
 
-```python
+```
 usage: CLAM [-h] [--version]
             {preprocessor,realigner,peakcaller,permutation_callpeak,peak_annotator,data_downloader}
             ...
@@ -123,7 +123,7 @@ If you don't want to run `realigner`, you can also run peakcaller directly after
 Example run:
 
 
-```python
+```
 CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
 ```
 
@@ -140,7 +140,7 @@ the prepared files in `outdir` if available.
 Example run:
 
 
-```python
+```
 CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method start --retag
 ```
 
@@ -163,7 +163,7 @@ As a new feature in version 1.2.0, we implemented multi-replicate mode for peakc
 Example run:
 
 
-```python
+```
 CLAM peakcaller -i path/to/IP/rep1/unique.sorted.bam,path/to/IP/rep2/unique.sorted.bam \
 path/to/IP/rep1/realigned.sorted.bam,path/to/IP/rep2/realigned.sorted.bam \
 -c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
@@ -181,7 +181,7 @@ More details about the permutation procedure is described in our NAR paper.
 Example run:
 
 
-```python
+```
 CLAM permutation_callpeak -i path/to/outdir/unique.sorted.bam path/to/outdir/realigned.sorted.bam \
 -o path/to/peaks/outdir -p 8 \
 --gtf path/to/gencode.v19.annotation.gtf
@@ -196,7 +196,7 @@ This sumcommand will annotate peaks to genomic regions. It requires genomic regi
 Example run:
 
 
-```python
+```
 CLAM peak_annotator path/to/peak/file/narrow_peak.unique.bed hg19 path/to/output/annotate.txt
 ```
 
@@ -209,7 +209,7 @@ This sumcommand will download prepared genomic annotation files to local system.
 Example run:
 
 
-```python
+```
 CLAM data_downloader hg19
 ```
 
