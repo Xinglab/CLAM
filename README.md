@@ -492,7 +492,7 @@ CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.
 <a id='section66'></a>
 ### Realigning
 
-This step will realign multi-mapped reads to a unique genome location. CLAM realigner will also use uniquely mapped reads to determin exact position of multi-mapped reads, 
+This step will realign multi-mapped reads to each putative genome location with a probability. CLAM realigner uses uniquely mapped reads to determine the probability weight of mutli-mapped reads for each genome locus. 
 
 
 ```
@@ -567,7 +567,7 @@ The header of result file will looks like:
 <a id='section69'></a>
 ### Detecting motif
 
-If you have [HOMER](http://homer.ucsd.edu/homer/motif/) installed, try to detect over-representing motifs using it.
+If you have [HOMER](http://homer.ucsd.edu/homer/motif/) installed, try to detect over-represented motifs using it.
 
 
 ```
