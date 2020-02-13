@@ -486,17 +486,17 @@ As one of the major feature of CLAM, multi-mapped reads were rescued by an EM pr
 
 
 ```
-CLAM preprocessor -i star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_Inp --read-tagger-method start
+CLAM preprocessor -i star/K562_RBFOX2_Inp/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_Inp --read-tagger-method start --strandness opposite
 ```
 
 
 ```
-CLAM preprocessor -i star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep1_IP --read-tagger-method start
+CLAM preprocessor -i star/K562_RBFOX2_rep1_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep1_IP --read-tagger-method start --strandness opposite
 ```
 
 
 ```
-CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep2_IP --read-tagger-method start
+CLAM preprocessor -i star/K562_RBFOX2_rep2_IP/Aligned.out.mask_rRNA.dup_removed.bam -o clam/K562_RBFOX2_rep2_IP --read-tagger-method start --strandness opposite
 ```
 
 [TOC](#section0)
@@ -508,17 +508,17 @@ This step will realign multi-mapped reads to each putative genome location with 
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_Inp/ -o clam/K562_RBFOX2_Inp --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_Inp/ -o clam/K562_RBFOX2_Inp --winsize 50 --max-tags -1 --read-tagger-method start --strandness opposite
 ```
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_rep1_IP/ -o clam/K562_RBFOX2_rep1_IP --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_rep1_IP/ -o clam/K562_RBFOX2_rep1_IP --winsize 50 --max-tags -1 --read-tagger-method start --strandness opposite
 ```
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsize 50 --max-tags -1 --read-tagger-method start --strandness opposite
 ```
 
 [TOC](#section0)
