@@ -118,6 +118,10 @@ This subcommand (new since v1.1) will prepare the input files for CLAM pipeline.
 
 Note that you can also run `CLAM realigner` directly, which will call `preprocessor` and automatically determine if `preprocessor` has been called in the output folder.
 
+Parameters:
+--read-tagger-method will tag a CLIP/RIP read to a particular locus; 'median' tags read center and is recommended for RIP-seq; 'start' tags read start site and is recommended for CLIP-seq.
+--max-tags N will collapse reads mapped to the identical locations up to N reads. This is usually used for RIP-seq with strong PCR duplication issues.
+
 If you don't want to run `realigner`, you can also run peakcaller directly after preprocessor.
 
 Example run:
@@ -133,6 +137,10 @@ CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --rea
 ### CLAM realigner
 This subcommand will run expectation-maxmization to assign the multi-mapped reads in a probablistic framework. 
 More details about the EM model is described in our NAR paper.
+
+Parameters:
+--read-tagger-method will tag a CLIP/RIP read to a particular locus; 'median' tags read center and is recommended for RIP-seq; 'start' tags read start site and is recommended for CLIP-seq.
+--max-tags N will collapse reads mapped to the identical locations up to N reads. This is usually used for RIP-seq with strong PCR duplication issues.
 
 Note when `--retag` is specified, `realigner` will re-run `preprocessor` regardless; otherwise, it will use 
 the prepared files in `outdir` if available.
