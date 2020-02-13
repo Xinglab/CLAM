@@ -130,7 +130,7 @@ Example run:
 
 
 ```
-CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median
+CLAM preprocessor -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method median  --strandness opposite
 ```
 
 [TOC](#section0)
@@ -153,7 +153,7 @@ Example run:
 
 
 ```
-CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method start --retag
+CLAM realigner -i path/to/input/Aligned.out.bam -o path/to/clam/outdir/ --read-tagger-method start --retag  --strandness opposite
 ```
 
 [TOC](#section0)
@@ -179,7 +179,7 @@ Example run:
 CLAM peakcaller -i path/to/IP/rep1/unique.sorted.bam,path/to/IP/rep2/unique.sorted.bam \
 path/to/IP/rep1/realigned.sorted.bam,path/to/IP/rep2/realigned.sorted.bam \
 -c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
--o path/to/peaks/outdir --unstranded --binsize 100 \
+-o path/to/peaks/outdir --unstranded --binsize 100 --unstranded \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
 
