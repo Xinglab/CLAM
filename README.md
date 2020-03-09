@@ -533,7 +533,7 @@ This step will call peaks in multi-replicate mode of CLAM.
 CLAM peakcaller -i clam/K562_RBFOX2_rep1_IP/unique.sorted.bam,clam/K562_RBFOX2_rep2_IP/unique.sorted.bam \
 clam/K562_RBFOX2_rep1_IP/realigned.sorted.bam,clam/K562_RBFOX2_rep2_IP/realigned.sorted.bam \
 -c clam/K562_RBFOX2_Inp/unique.sorted.bam clam/K562_RBFOX2_Inp/realigned.sorted.bam \
--o clam/peaks --unstranded --binsize 100 \
+-o clam/peaks --binsize 100 \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
 
