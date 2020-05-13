@@ -41,7 +41,7 @@ Recently, we updated CLAM to version v1.2.0 with new features:
 
 <a id='section2'></a>
 ## Installation
-CLAM v1.2 works under Python 2/3. Please click and download the [lastest release](https://github.com/Xinglab/CLAM/releases) 
+CLAM v1.2 works under Python 2/3. Please download the [lastest release](https://github.com/Xinglab/CLAM/releases).
 
 ```
 wget https://github.com/Xinglab/CLAM/releases/download/v1.2.0/CLAM-1.2.0.tar.gz
