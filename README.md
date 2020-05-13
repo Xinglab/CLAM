@@ -1,3 +1,5 @@
+[![Latest Release](https://img.shields.io/github/release/Xinglab/CLAM.svg?label=Release)](https://github.com/Xinglab/CLAM/releases/latest)
+[![Github All Releases](https://img.shields.io/github/downloads/Xinglab/CLAM/total.svg?label=Download)](https://github.com/Xinglab/CLAM/releases)
 
 # CLIP-seq Analysis of Multi-mapped reads
 
