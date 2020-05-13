@@ -43,11 +43,11 @@ Recently, we updated CLAM to version v1.2.0 with new features:
 ## Installation
 CLAM v1.2 works under Python 2/3. Please click and download the [lastest release](https://github.com/Xinglab/CLAM/releases) 
 
-'''
+```
 wget https://github.com/Xinglab/CLAM/releases/download/v1.2.0/CLAM-1.2.0.tar.gz
 tar -zxvf CLAM-1.2.0.tar.gz && cd CLAM-1.2.0
 python setup.py install
-'''
+```
 
 in your terminal and this will automatically install CLAM in your currently working python.
 
