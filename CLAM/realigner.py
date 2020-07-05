@@ -540,7 +540,8 @@ if __name__=='__main__':
 	# users should call from `CLAM subcommand` instead
 	# of running this script directly
 	# *****
-	### set up logger
+	### set up logger 
+	# git test_wk
 	logger = logging.getLogger('CLAM')
 	logger.setLevel(logging.DEBUG)
 	# create file handler which logs even debug messages
