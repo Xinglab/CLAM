@@ -69,8 +69,7 @@ def read_tagger_collection(alignment, method='median', **kwargs):
 	return tag
 
 
-
-def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, strandness):
+def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_method, lib_type):
 	"""Pre-processing function for cleaning up the input bam file.
 	Args:
 	Returns:
@@ -131,9 +130,9 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 			read_len = sum([i[1] for i in read.cigar if i[0]==0])
 			tagged_read.tags += [('RL', read_len)]
 
-			# add strandness check
-			if strandness != "none":
-				tagged_read.is_reverse = (read.is_reverse) ^ (strandness!="same")
+			# add lib_type check
+			if lib_type != "unstranded":
+				tagged_read.is_reverse = (read.is_reverse) ^ (lib_type!="sense")
 			
 			if read.is_secondary or (read.has_tag('NH') and read.opt("NH")>1):
 				#try:
@@ -277,17 +276,16 @@ def parser(args):
 		max_hits = args.max_hits
 		## Note: if specified max_tags, need pre-sorted bam
 		max_tags = args.max_tags
-		strandness = args.strandness
+		lib_type = args.lib_type
 		
 		#logger = logging.getLogger('CLAM.Preprocessor')
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		filter_bam_multihits(in_bam, max_hits=max_hits, max_tags=max_tags, out_dir=out_dir, 
-			read_tagger_method=tag_method,
-			strandness=strandness)
+			read_tagger_method=tag_method, lib_type=lib_type)
 		
 		logger.info('end')
-	except KeyboardInterrupt():
+	except KeyboardInterrupt:
 		sys.exit(0)
 	return

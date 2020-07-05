@@ -161,10 +161,10 @@ def add_preprocessor_parser( subparsers ):
 	ag_prep.add_argument("--max-tags", dest="max_tags", type=int, default=-1,
 		help="The maximum identical tags at given location; default: -1, no filter")
 
-	# strandness
-	ag_prep.add_argument("--strandness", dest="strandness", type=str, 
-		default="same", choices=['same', 'opposite', 'none'],
-		help="The expected read strandness with transcription direction: same, opposite, or none(i.e. unstranded); default: same")
+	# lib_type
+	ag_prep.add_argument("--lib-type", dest="lib_type", type=str, 
+		default="sense", choices=['sense', 'antisense', 'ubstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
 
 	return
 
@@ -200,9 +200,10 @@ def add_realigner_parser( subparsers ):
 	#ag_realigner.add_argument("--unstranded", dest="unstranded", default=False, action="store_true",
 	#	help="Unstranded alignments if turned on")
 
-	ag_realigner.add_argument("--strandness", dest="strandness", type=str, 
-		default="same", choices=['same', 'opposite', 'none'],
-		help="The expected read strandness with transcription direction: same, opposite, or none(i.e. unstranded); default: same")
+	# lib_type
+	ag_realigner.add_argument("--lib-type", dest="lib_type", type=str,
+                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
 	
 	return
 
@@ -249,8 +250,9 @@ def add_peakcaller_parser( subparsers ):
 	ag_peakcaller.add_argument("-b", "--binsize", dest="binsize", type=int, default=50,
 		help="Bin size for calling peaks; default: 50")
 	
-	ag_peakcaller.add_argument("--unstranded", dest="unstranded", action="store_true", default=False,
-		help="Unstranded alignments if turned on")
+	ag_peakcaller.add_argument("--lib-type", dest="lib_type", type=str,
+                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
 	
 	return
 
@@ -286,8 +288,9 @@ def add_permutation_callpeak_parser( subparsers ):
 	ag_peakcaller.add_argument("--extend", dest="extend", type=int, default=50,
 		help="Extend peak to this size if less than it; default: 50")
 	
-	ag_peakcaller.add_argument("--unstranded", dest="unstranded", action="store_true", default=False,
-		help="Unstranded alignments if turned on")
+	ag_peakcaller.add_argument("--lib-type", dest="lib_type", type=str,
+                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
 	
 	return
 

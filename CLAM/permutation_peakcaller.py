@@ -65,7 +65,7 @@ def parser(args):
 		assert len(args.in_bam)==2
 		tid_to_qval_compact = pool.map(
 			_child_get_permutation_fdr, 
-			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~args.unstranded, 'fdr', random_state)
+			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
 				for i in range(args.nthread) 
 			])
 
@@ -75,7 +75,7 @@ def parser(args):
 		unique_tid_to_qval, combined_tid_to_qval = unpack_tid_to_qval(tid_to_qval_compact)
 	else:
 		unique_tid_to_qval, combined_tid_to_qval = _child_get_permutation_fdr(
-				(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~args.unstranded, 'fdr', random_state)
+				(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
 			)
 	
 	#pickle.dump(unique_tid_to_qval, open(tmp_dir+'/unique_to_qval.pdata','wb'), -1)

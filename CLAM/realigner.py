@@ -392,7 +392,7 @@ def get_genomic_clusters(mbam, winsize=50, unstranded=False):
 
 
 def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='median', 
-		winsize=50, unstranded=False, retag=False, strandness="same"):
+              winsize=50, unstranded=False, retag=False, lib_type="sense"):
 	"""The main entry for CLAM-realigner.
 
 	Args:
@@ -405,8 +405,8 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 		winsize (int): window size 
 		unstranded (bool): ignore alignment strand info if turned on
 		retag (bool): force to call `preprocessor` to process `in_bam` if turned on
-		strandness (str): specifies if the expected read alignment strand is `same` with 
-			transcript strand, or `opposite`, or `none` i.e. unstranded
+		lib_type (str): specifies if the expected read alignment strand is `sense` with 
+			transcript strand, or `antisense`, or `unstranded`. 
 	
 	Returns:
 		None
@@ -424,7 +424,7 @@ def realigner(in_bam, out_dir, max_hits=100, max_tags=-1, read_tagger_method='me
 			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
 			) :
 		filter_bam_multihits(in_bam, max_tags=max_tags, max_hits=max_hits, out_dir=out_dir, read_tagger_method=read_tagger_method, 
-			strandness=strandness)
+			lib_type=lib_type)
 	else:
 		logger.info("found existing bams; skipped tagging.")
 
@@ -517,14 +517,14 @@ def parser(args):
 		max_tags = args.max_tags
 		retag = args.retag
 		winsize = args.winsize
-		strandness = args.strandness
-		unstranded = strandness == "none"
+		lib_type = args.lib_type
+		unstranded = lib_type == "unstranded"
 		
 		logger.info('start')
 		logger.info('run info: %s'%(' '.join(sys.argv)))
 		
 		realigner(in_bam, out_dir, max_hits=max_hits, max_tags=max_tags, read_tagger_method=tag_method, 
-			winsize=winsize, unstranded=unstranded, retag=retag, strandness=strandness)
+			winsize=winsize, unstranded=unstranded, retag=retag, lib_type=lib_type)
 		
 		logger.info('end')
 	except KeyboardInterrupt:
@@ -534,46 +534,45 @@ def parser(args):
 	
 	
 
-if __name__=='__main__':
+# if __name__=='__main__':
 	# *****
 	# NOTE: below is used for debugging purpose;
 	# users should call from `CLAM subcommand` instead
 	# of running this script directly
 	# *****
-	### set up logger 
-	# git test_wk
-	logger = logging.getLogger('CLAM')
-	logger.setLevel(logging.DEBUG)
-	# create file handler which logs even debug messages
-	fh = logging.FileHandler(
-		'CLAM.Realigner.'+'-'.join(str(datetime.datetime.now()).replace(':','-').split()) + '.log')
-	fh.setLevel(logging.INFO)
-	# create console handler with a higher log level
-	ch = logging.StreamHandler()
-	ch.setLevel(logging.DEBUG)
-	# create formatter and add it to the handlers
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -\n %(message)s')
-	fh.setFormatter(formatter)
-	ch.setFormatter(formatter)
-	# add the handlers to the logger
-	logger.addHandler(fh)
-	logger.addHandler(ch)
-	logger.info('start')
+	### set up logger
+	# logger = logging.getLogger('CLAM')
+	# logger.setLevel(logging.DEBUG)
+	# # create file handler which logs even debug messages
+	# fh = logging.FileHandler(
+	# 	'CLAM.Realigner.'+'-'.join(str(datetime.datetime.now()).replace(':','-').split()) + '.log')
+	# fh.setLevel(logging.INFO)
+	# # create console handler with a higher log level
+	# ch = logging.StreamHandler()
+	# ch.setLevel(logging.DEBUG)
+	# # create formatter and add it to the handlers
+	# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -\n %(message)s')
+	# fh.setFormatter(formatter)
+	# ch.setFormatter(formatter)
+	# # add the handlers to the logger
+	# logger.addHandler(fh)
+	# logger.addHandler(ch)
+	# logger.info('start')
 	
-	logger.info('run info: %s'%(' '.join(sys.argv)))
-	bam, out_dir, out_dir = sys.argv[1:4]
-	retag = False
-	if len(sys.argv)>4:
-		tagger_method = sys.argv[4]
-		retag = True
-		logger.info('retagging with "%s"'%tagger_method)
-	else:
-		tagger_method = 'median'
+	# logger.info('run info: %s'%(' '.join(sys.argv)))
+	# bam, out_dir, out_dir = sys.argv[1:4]
+	# retag = False
+	# if len(sys.argv)>4:
+	# 	tagger_method = sys.argv[4]
+	# 	retag = True
+	# 	logger.info('retagging with "%s"'%tagger_method)
+	# else:
+	# 	tagger_method = 'median'
 		
-	if retag or not (
-			os.path.isfile(os.path.join(out_dir,'unique.sorted.bam')) and \
-			os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
-			) :
-		filter_bam_multihits(bam, max_hits=100, out_dir=out_dir, read_tagger=lambda x: read_tagger(x, tagger_method))
-	realigner(out_dir, out_dir, winsize=50, unstranded=False)
-	logger.info('end')
+	# if retag or not (
+	# 		os.path.isfile(os.path.join(out_dir,'unique.sorted.bam')) and \
+	# 		os.path.isfile(os.path.join(out_dir,'multi.sorted.bam')) \
+	# 		) :
+	# 	filter_bam_multihits(bam, max_hits=100, out_dir=out_dir, read_tagger=lambda x: read_tagger(x, tagger_method))
+	# realigner(out_dir, out_dir, winsize=50, unstranded=False)
+	# logger.info('end')

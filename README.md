@@ -123,10 +123,28 @@ Note that you can also run `CLAM realigner` directly, which will call `preproces
 
 Parameters:
 
---read-tagger-method will tag a CLIP/RIP read to a particular locus; 'median' tags read center and is recommended for RIP-seq; 'start' tags read start site and is recommended for CLIP-seq.
+```
+-h, --help            show help message and exit
+-i IN_BAM, --input IN_BAM
+                      Input bam file
+-o OUT_DIR, --out-dir OUT_DIR
+                      Output folder
+--read-tagger-method {median,start}
+                      Read tagger method. Indicate method to tag a CLIP/RIP read to a particular locus; 
+                      'median' tags read center and is recommended for RIP-seq; 
+                      'start' tags read start site and is recommended for CLIP-seq.
+--max-multihits MAX_HITS
+                      The maximum hits allowed for multi-mapped reads;
+                      default: 100
+--max-tags MAX_TAGS   The maximum identical tags at given location; default:
+                      -1, no filter. CLAM will collapse reads mapped to the identical locations up to MAX_TAGS reads. 
+                      This is usually used for RIP-seq with strong PCR duplication issues.
+--lib-type {sense,antisense,unstranded}
+                      The expected read strandness with transcription
+                      direction: sense, antisense, or unstranded;
+                      default: sense
 
---max-tags N will collapse reads mapped to the identical locations up to N reads. This is usually used for RIP-seq with strong PCR duplication issues.
-
+```
 If you don't want to run `realigner`, you can also run peakcaller directly after preprocessor.
 
 Example run:
@@ -145,9 +163,29 @@ More details about the EM model is described in our NAR paper.
 
 Parameters:
 
---read-tagger-method will tag a CLIP/RIP read to a particular locus; 'median' tags read center and is recommended for RIP-seq; 'start' tags read start site and is recommended for CLIP-seq.
-
---max-tags N will collapse reads mapped to the identical locations up to N reads. This is usually used for RIP-seq with strong PCR duplication issues.
+```
+-i IN_BAM, --input IN_BAM
+                      Input bam file
+-o OUT_DIR, --out-dir OUT_DIR
+                      Output folder
+--read-tagger-method {median,start}
+                      Read tagger method. Indicate method to tag a CLIP/RIP read to a particular locus; 
+                      'median' tags read center and is recommended for RIP-seq; 
+                      'start' tags read start site and is recommended for CLIP-seq.
+--max-multihits MAX_HITS
+                      The maximum hits allowed for multi-mapped reads;
+                      default: 100
+--max-tags MAX_TAGS   The maximum identical tags at given location; default:
+                      -1, no filter. CLAM will collapse reads mapped to the identical locations up to MAX_TAGS reads. 
+                      This is usually used for RIP-seq with strong PCR duplication issues.
+--retag               Retag the bam regardless when turned on; invalid when
+                      no previous files found
+--winsize WINSIZE     Local window size for em computations; default: 50
+--lib-type {sense,antisense,unstranded}
+                      The expected read strandness with transcription
+                      direction: sense, antisense, or unstranded;
+                      default: sense
+```
 
 Note when `--retag` is specified, `realigner` will re-run `preprocessor` regardless; otherwise, it will use 
 the prepared files in `outdir` if available.
@@ -175,6 +213,44 @@ mapped reads.
 
 As a new feature in version 1.2.0, we implemented multi-replicate mode for peakcaller. Simply use comma to seperate bam files of replicates (Here, we assume there are two replicates named rep1 and rep2).
 
+Parameters:
+
+```
+-h, --help            show help message and exit
+-i IN_BAM [IN_BAM ...], --input IN_BAM [IN_BAM ...]
+                      Filepaths for IP bam files, e.g ubam1,ubam2
+                      mbam1,mbam2
+-c CON_BAM [CON_BAM ...], --control-dir CON_BAM [CON_BAM ...]
+                      Filepaths for control bam files
+-o OUT_DIR, --out-dir OUT_DIR
+                      Output folder
+--gtf GTF_FP          GTF filepath
+-p NTHREAD, --nthread NTHREAD
+                      Number of threads; default: 8
+-u, --unique-only     Call peaks using only unique-mapped reads when turned
+                      on
+--pool                Pool the read counts if provided with multiple
+                      replicates; default: False
+--min-clip-cov MIN_CLIP_COV
+                      Minimum CLIP reads per gene to perform analysis;
+                      default: 4
+--qval-cutoff QVAL_CUTOFF
+                      Cutoff for adjusted p-values; default: 0.05
+--fold-change FOLD_CHANGE [FOLD_CHANGE ...]
+                      Threasholds for signal range (fold change w/ control;
+                      tag count w/o control); default: 2-inf
+--normalize-lib       use total library size to normalize signal and
+                      control, instead of gene-by-gene basis; default: False
+-b BINSIZE, --binsize BINSIZE
+                      Bin size for calling peaks; default: 50
+--lib-type {sense,antisense,unstranded}
+                      The expected read strandness with transcription
+                      direction: sense, antisense, or unstranded;
+                      default: sense
+
+```
+
+
 Example run:
 
 
@@ -182,7 +258,7 @@ Example run:
 CLAM peakcaller -i path/to/IP/rep1/unique.sorted.bam,path/to/IP/rep2/unique.sorted.bam \
 path/to/IP/rep1/realigned.sorted.bam,path/to/IP/rep2/realigned.sorted.bam \
 -c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
--o path/to/peaks/outdir --unstranded --binsize 100 --unstranded \
+-o path/to/peaks/outdir --lib_type sense --binsize 100 --unstranded \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
 
