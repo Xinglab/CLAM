@@ -626,7 +626,7 @@ def parser(args):
 			os.mkdir(out_dir)
 		gtf_fp = args.gtf_fp
 		nthread = args.nthread
-		unstranded = args.unstranded
+		unstranded = args.lib_type=='unstranded'
 		unique_only = args.unique_only
 		binsize = args.binsize
 		qval_cutoff = args.qval_cutoff
