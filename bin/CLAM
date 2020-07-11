@@ -163,8 +163,8 @@ def add_preprocessor_parser( subparsers ):
 
 	# lib_type
 	ag_prep.add_argument("--lib-type", dest="lib_type", type=str, 
-		default="sense", choices=['sense', 'antisense', 'ubstranded'],
-                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
+                      default="sense", choices=['sense', 'antisense', 'unstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or unstranded; default: sense")
 
 	return
 
@@ -202,8 +202,8 @@ def add_realigner_parser( subparsers ):
 
 	# lib_type
 	ag_realigner.add_argument("--lib-type", dest="lib_type", type=str,
-                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
-                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
+                           default="sense", choices=['sense', 'antisense', 'unstranded'],
+                      help="The expected read strandness with transcription direction: sense, antisense, or unstranded; default: sense")
 	
 	return
 
@@ -251,8 +251,8 @@ def add_peakcaller_parser( subparsers ):
 		help="Bin size for calling peaks; default: 50")
 	
 	ag_peakcaller.add_argument("--lib-type", dest="lib_type", type=str,
-                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
-                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
+                            default="sense", choices=['sense', 'antisense', 'unstranded'],
+                            help="The expected read strandness with transcription direction: sense, antisense, or unstranded; default: sense")
 	
 	return
 
@@ -289,8 +289,8 @@ def add_permutation_callpeak_parser( subparsers ):
 		help="Extend peak to this size if less than it; default: 50")
 	
 	ag_peakcaller.add_argument("--lib-type", dest="lib_type", type=str,
-                      default="sense", choices=['sense', 'antisense', 'ubstranded'],
-                      help="The expected read strandness with transcription direction: sense, antisense, or ubstranded; default: sense")
+                      default="sense", choices=['sense', 'antisense', 'unstranded'],
+                            help="The expected read strandness with transcription direction: sense, antisense, or unstranded; default: sense")
 	
 	return
 
