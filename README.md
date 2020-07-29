@@ -258,7 +258,7 @@ Example run:
 CLAM peakcaller -i path/to/IP/rep1/unique.sorted.bam,path/to/IP/rep2/unique.sorted.bam \
 path/to/IP/rep1/realigned.sorted.bam,path/to/IP/rep2/realigned.sorted.bam \
 -c path/to/CTRL/unique.sorted.bam path/to/CTRL/realigned.sorted.bam \
--o path/to/peaks/outdir --lib_type sense --binsize 100 --unstranded \
+-o path/to/peaks/outdir --lib_type sense --binsize 100 --lib-type unstranded \
 --gtf path/to/gencode.v19.annotation.gtf
 ```
 
