@@ -65,7 +65,7 @@ def parser(args):
 		assert len(args.in_bam)==2
 		tid_to_qval_compact = pool.map(
 			_child_get_permutation_fdr, 
-			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
+			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~(args.lib_type=='unstranded'), 'fdr', random_state)
 				for i in range(args.nthread) 
 			])
 
@@ -75,7 +75,7 @@ def parser(args):
 		unique_tid_to_qval, combined_tid_to_qval = unpack_tid_to_qval(tid_to_qval_compact)
 	else:
 		unique_tid_to_qval, combined_tid_to_qval = _child_get_permutation_fdr(
-				(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
+				(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(args.lib_type=='unstranded'), 'fdr', random_state)
 			)
 	
 	#pickle.dump(unique_tid_to_qval, open(tmp_dir+'/unique_to_qval.pdata','wb'), -1)
@@ -119,7 +119,7 @@ def parser(args):
 			_, signal_qval, gene_name = peak
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
-	if args.unstranded:
+	if args.lib_type=='unstranded':
 		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
 	else:
 		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -s -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
