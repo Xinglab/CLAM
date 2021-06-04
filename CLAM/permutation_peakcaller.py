@@ -13,8 +13,8 @@ Example run:
 	```
 Author:
 	Zijun Zhang <zj.z@ucla.edu>
-
-Tested under python 2.7.3
+	Wankun Deng	<dengwankun@hotmail.com>
+Tested under python 3.7.6
 """
 
 from . import config
@@ -59,13 +59,14 @@ def parser(args):
 	
 	# call peaks
 	unibam_file=args.in_bam[0]
-	multibam_file=args.in_bam[1]	
+	multibam_file=args.in_bam[1] if len(args.in_bam)>=2 else None
+	
 	if nthread>1:
 		pool = Pool(processes=args.nthread)
-		assert len(args.in_bam)==2
+		# assert len(args.in_bam)==2
 		tid_to_qval_compact = pool.map(
 			_child_get_permutation_fdr, 
-			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
+			[ (unibam_file, multibam_file, child_gene_list[i], gene_annot, args.qval_cutoff, max_iter, ~(args.lib_type=='unstranded'), 'fdr', random_state)
 				for i in range(args.nthread) 
 			])
 
@@ -75,8 +76,8 @@ def parser(args):
 		unique_tid_to_qval, combined_tid_to_qval = unpack_tid_to_qval(tid_to_qval_compact)
 	else:
 		unique_tid_to_qval, combined_tid_to_qval = _child_get_permutation_fdr(
-				(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(args.unstranded=='unstranded'), 'fdr', random_state)
-			)
+                    (unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(
+                    	args.lib_type == 'unstranded'), 'fdr', random_state))
 	
 	#pickle.dump(unique_tid_to_qval, open(tmp_dir+'/unique_to_qval.pdata','wb'), -1)
 	#pickle.dump(combined_tid_to_qval, open(tmp_dir+'/combined_to_qval.pdata','wb'), -1)
@@ -93,7 +94,7 @@ def parser(args):
 		
 	
 	unique_peaks=merge_peaks(unique_tid_to_qval, merge_size, args.qval_cutoff)
-	combined_peaks=merge_peaks(combined_tid_to_qval, merge_size, args.qval_cutoff)
+	combined_peaks=merge_peaks(combined_tid_to_qval, merge_size, args.qval_cutoff)  if multibam_file is not None else None
 	
 	# write peak-calling results to file.
 	narrowPeak_formatter = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t.\t%.3e\t.\n"
@@ -109,20 +110,23 @@ def parser(args):
 			_, signal_qval, gene_name = peak
 			signal, qval = signal_qval
 			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'unique', strand, signal, qval) )
-		for peak in combined_peaks:
-			if args.extend is None:
-				wt_loc=peak[0]
-			else:
-				wt_loc=extend_peak_region(peak[0], args.extend)
-			#f.write(wt_loc + '\t' + '\t'.join([str(x) for x in peak[1]]) + '\t' + peak[2] + '\tcombined\n')
-			chr, start, end, strand = wt_loc.split('\t')
-			_, signal_qval, gene_name = peak
-			signal, qval = signal_qval
-			f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
-	if args.unstranded:
-		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+		if combined_peaks is not None:
+			for peak in combined_peaks:
+				if args.extend is None:
+					wt_loc=peak[0]
+				else:
+					wt_loc=extend_peak_region(peak[0], args.extend)
+				#f.write(wt_loc + '\t' + '\t'.join([str(x) for x in peak[1]]) + '\t' + peak[2] + '\tcombined\n')
+				chr, start, end, strand = wt_loc.split('\t')
+				_, signal_qval, gene_name = peak
+				signal, qval = signal_qval
+				f.write( narrowPeak_formatter % (chr, start, end, gene_name, 'combined', strand, signal, qval) )
+	if args.lib_type=='unstranded':
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| \
+			bedtools merge -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
 	else:
-		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| bedtools merge -s -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
+		cmd = ''' sort -k1,1 -k2,2n %s/all_permutation_peaks.bed |awk '{OFS="\t"; print $1,$2,$3,$4":"$7":"$9,$5,$6}'| \
+			bedtools merge -s -d -1 -i stdin -c 4,5,6 -o collapse,collapse,distinct  > %s''' % (output_dir, os.path.join(output_dir,'narrow_peak.permutation.bed') )
 	os.system( cmd )
 	logger.info('end')
 	return
@@ -145,11 +149,17 @@ def unpack_tid_to_qval(compact):
 	combined_tid_to_qval=defaultdict(list)
 	for item in compact:
 		unique, combined = item[0], item[1]
-		for tid in combined:
-			if len(unique[tid])>0:
-				unique_tid_to_qval[tid]=unique[tid]
-			if len(combined[tid])>1:
-				combined_tid_to_qval[tid]=combined[tid]
+		if combined is None:
+			combined_tid_to_qval=None
+			for tid in unique:
+				if len(unique[tid]) > 0:
+					unique_tid_to_qval[tid] = unique[tid]
+		else:
+			for tid in combined:
+				if len(unique[tid])>0:
+					unique_tid_to_qval[tid]=unique[tid]
+				if len(combined[tid])>1:
+					combined_tid_to_qval[tid]=combined[tid]
 	return unique_tid_to_qval,combined_tid_to_qval
 
 	
@@ -162,10 +172,11 @@ def _child_get_permutation_fdr(args):
 	random.seed(seed)
 	
 	unique_tid_to_qval=defaultdict(list)
-	combined_tid_to_qval=defaultdict(list)
+	combined_tid_to_qval = defaultdict(
+		list) if multibam_file is not None else None
 	
 	unibam=pysam.Samfile(unibam_file, 'rb')
-	multibam=pysam.Samfile(multibam_file, 'rb')
+	multibam=pysam.Samfile(multibam_file, 'rb') if multibam_file is not None else None
 	
 	pid = os.getpid()
 	tot = len(child_gene_list)
@@ -177,15 +188,17 @@ def _child_get_permutation_fdr(args):
 		gene = gene_annot[gene_name]
 		chr, start, end, strand, tid = gene[0:5]
 		unique_reads = read_tid_frag_from_bam(gene, unibam, is_stranded, True)
-		multi_reads = read_tid_frag_from_bam(gene, multibam, is_stranded, False)
+		multi_reads = read_tid_frag_from_bam(gene, multibam, is_stranded, False) if multibam_file is not None else None
 		
 		this_unique_to_qval = do_permutation(gene, unique_reads, max_iter, pval_cutoff, correction_method)
-		this_combined_to_qval = do_permutation(gene, unique_reads+multi_reads, max_iter, pval_cutoff, correction_method)
+		this_combined_to_qval = do_permutation(gene, unique_reads+multi_reads, max_iter, pval_cutoff, correction_method) if multibam_file is not None else None
 		
 		unique_tid_to_qval[tid].extend(this_unique_to_qval)
-		combined_tid_to_qval[tid].extend(this_combined_to_qval)
+		if multibam_file is not None:
+			combined_tid_to_qval[tid].extend(this_combined_to_qval)
 	unibam.close()
-	multibam.close()
+	if multibam_file is not None:
+		multibam.close() 
 	return unique_tid_to_qval, combined_tid_to_qval
 
 
