@@ -587,17 +587,17 @@ This step will realign multi-mapped reads to each putative genome location with 
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_Inp/ -o clam/K562_RBFOX2_Inp --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_Inp/multi.sorted.bam -o clam/K562_RBFOX2_Inp --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_rep1_IP/ -o clam/K562_RBFOX2_rep1_IP --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_rep1_IP/multi.sorted.bam -o clam/K562_RBFOX2_rep1_IP --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
 
 ```
-CLAM realigner -i clam/K562_RBFOX2_rep2_IP/ -o clam/K562_RBFOX2_rep2_IP --winsize 50 --max-tags -1 --read-tagger-method start
+CLAM realigner -i clam/K562_RBFOX2_rep2_IP/multi.sorted.bam -o clam/K562_RBFOX2_rep2_IP --winsize 50 --max-tags -1 --read-tagger-method start
 ```
 
 [TOC](#section0)
