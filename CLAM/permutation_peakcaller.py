@@ -76,7 +76,7 @@ def parser(args):
 		unique_tid_to_qval, combined_tid_to_qval = unpack_tid_to_qval(tid_to_qval_compact)
 	else:
 		unique_tid_to_qval, combined_tid_to_qval = _child_get_permutation_fdr(
-    (unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(
+			(unibam_file, multibam_file, gene_list, gene_annot, args.qval_cutoff, max_iter, ~(
                     	args.lib_type == 'unstranded'), 'fdr', random_state))
 
 	

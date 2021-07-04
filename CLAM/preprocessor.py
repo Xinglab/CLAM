@@ -118,14 +118,14 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 
 			tagged_read = pysam.AlignedSegment()
 			tagged_read.query_name = read.query_name
-			tagged_read.query_sequence = 'N'
+			tagged_read.query_sequence = read.query_sequence
 			tagged_read.flag = read.flag
 			tagged_read.reference_id = read.reference_id
 			tagged_read.reference_start = read_tag - 1  # 0-based leftmost coordinate
 			tagged_read.mapping_quality = read.mapping_quality
-			tagged_read.cigar = ((0,1),)
+			tagged_read.cigar = read.cigar
 			tagged_read.template_length = read.template_length
-			tagged_read.query_qualities = pysam.qualitystring_to_array("<")
+			tagged_read.query_qualities = read.query_qualities#pysam.qualitystring_to_array("<")
 			tagged_read.tags = read.tags
 			read_len = sum([i[1] for i in read.cigar if i[0]==0])
 			tagged_read.tags += [('RL', read_len)]
