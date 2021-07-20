@@ -34,6 +34,7 @@ import datetime
 import bisect
 import argparse as ap
 import inspect
+import hashlib
 
 
 logger = logging.getLogger('CLAM.Preprocessor')
@@ -118,17 +119,23 @@ def filter_bam_multihits(filename, max_tags, max_hits, out_dir, read_tagger_meth
 
 			tagged_read = pysam.AlignedSegment()
 			tagged_read.query_name = read.query_name
-			tagged_read.query_sequence = read.query_sequence
+			tagged_read.query_sequence = 'N'
 			tagged_read.flag = read.flag
 			tagged_read.reference_id = read.reference_id
 			tagged_read.reference_start = read_tag - 1  # 0-based leftmost coordinate
 			tagged_read.mapping_quality = read.mapping_quality
-			tagged_read.cigar = read.cigar
+			tagged_read.cigar = ((0, 1),)
 			tagged_read.template_length = read.template_length
-			tagged_read.query_qualities = read.query_qualities#pysam.qualitystring_to_array("<")
+			tagged_read.query_qualities = pysam.qualitystring_to_array("<")
 			tagged_read.tags = read.tags
-			read_len = sum([i[1] for i in read.cigar if i[0]==0])
+			read_len = sum([i[1] for i in read.cigar if i[0] == 0])
 			tagged_read.tags += [('RL', read_len)]
+			if len(read.query_sequence) >= 32:
+				tagged_read.tags += [('SQ',
+				                      hashlib.md5(read.query_sequence.encode('utf-8')).hexdigest())]
+			else:
+				tagged_read.tags += [('SQ', read.query_sequence)]
+
 
 			# add lib_type check
 			if lib_type != "unstranded":
@@ -186,7 +193,7 @@ def collapse_stack(stack, collapse_dict, max_tags):
 	new_alignment_list = []
 	new_alignment_dict = defaultdict(list)
 	for aln in stack:
-		new_alignment_dict[aln.query_sequence].append(aln)
+		new_alignment_dict[aln.tags[-1][1]].append(aln)
 	
 	# TODO 2017.10.21: 
 	# further collapse `new_alignment_dict`
@@ -206,7 +213,9 @@ def collapse_stack(stack, collapse_dict, max_tags):
 			target_alignment = new_alignment_dict[seq][0:max_tags]
 			for aln_qname in this_alignment_qname_list:
 				collapse_dict[aln_qname] = [x.qname for x in target_alignment]
-		new_alignment_list.extend( target_alignment )
+		for read in target_alignment:
+			read.tags=read.tags[:-1]
+			new_alignment_list.append( read )
 	return new_alignment_list, collapse_dict
 
 
